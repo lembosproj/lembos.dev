@@ -11,7 +11,6 @@ import {
   AuthorizationLayers,
   ConvergeFigure,
   RoutingFigure,
-  VersionLadder,
 } from "@/components/site/figures"
 import {
   Card,
@@ -227,6 +226,7 @@ export default function Home() {
                 src="/portal/catalog-light.png"
                 srcDark="/portal/catalog-dark.png"
                 alt="The Lembos Portal listing business domains, each with its type, parent, owner and status."
+                ratio={1.6}
                 priority
               />
               <p className="mt-4 text-center text-sm text-muted-foreground">
@@ -292,42 +292,38 @@ export default function Home() {
         {/* Versioned building blocks                                         */}
         {/* ---------------------------------------------------------------- */}
         <Section className="bg-background-gray">
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
-            <div>
-              <SectionHeading
-                eyebrow="The idea underneath"
-                title="Every building block is an entity plus immutable revisions"
-                lead="The entity is what everything names. The revision is what a deployment pins. Blueprints, configuration, API contracts, policies and environments all work this way, which is what makes the rest of the platform expressible rather than aspirational."
-              />
+          <SectionHeading
+            eyebrow="The idea underneath"
+            title="Every building block is an entity plus immutable revisions"
+            lead="The entity is what everything names. The revision is what a deployment pins. Blueprints, configuration, API contracts, policies and environments all work this way, which is what makes the rest of the platform expressible rather than aspirational."
+          />
 
-              <dl className="mt-10 space-y-6">
-                <Term name="Reproducibility">
-                  A published revision cannot change under anything pinned to it,
-                  so replaying a deployment a month later produces the same
-                  result.
-                </Term>
-                <Term name="Divergence on purpose">
-                  Staging a version ahead, a canary stamp on a newer artifact, a
-                  region on an older blueprint — environments differing{" "}
-                  <em>is</em> progressive delivery, not a failure to converge.
-                </Term>
-                <Term name="One question, one answer">
-                  “Which version is in effect here” means the same thing whether
-                  the block is a blueprint, a configuration, an API contract, a
-                  policy or a workload declaration.
-                </Term>
-              </dl>
-            </div>
-
-            <div>
-              <VersionLadder />
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                One status machine across every versioned thing. Draft is part of
-                it, so everything has somewhere to sit before it is live — and a
-                version whose artifact cannot be fetched is never handed out.
-              </p>
-            </div>
+          <div className="mt-12">
+            <PortalShot
+              src="/portal/blueprint-versions-light.png"
+              srcDark="/portal/blueprint-versions-dark.png"
+              alt="The versions of a blueprint in the Portal: 2.5.0-rc.1 draft, 2.4.0 published and current, 2.3.0 withdrawn, 2.2.0 deprecated."
+              ratio={2.6}
+              caption="One status machine across every versioned thing. Draft is part of it, so everything has somewhere to sit before it is live — and a version whose artifact cannot be fetched is never handed out."
+            />
           </div>
+
+          <dl className="mt-14 grid gap-8 md:grid-cols-3">
+            <Term name="Reproducibility">
+              A published revision cannot change under anything pinned to it, so
+              replaying a deployment a month later produces the same result.
+            </Term>
+            <Term name="Divergence on purpose">
+              Staging a version ahead, a canary stamp on a newer artifact, a
+              region on an older blueprint — environments differing <em>is</em>{" "}
+              progressive delivery, not a failure to converge.
+            </Term>
+            <Term name="One question, one answer">
+              “Which version is in effect here” means the same thing whether the
+              block is a blueprint, a configuration, an API contract, a policy or
+              a workload declaration.
+            </Term>
+          </dl>
         </Section>
 
         {/* ---------------------------------------------------------------- */}
@@ -350,6 +346,16 @@ export default function Home() {
             Automated deployment is one way to close it. Reconciliation, rollback
             and progressive rollout are others.
           </p>
+
+          <div className="mt-12">
+            <PortalShot
+              src="/portal/environment-prod-light.png"
+              srcDark="/portal/environment-prod-dark.png"
+              alt="A production environment in the Portal, subdivided into eu-north and eu-west slots, each reporting live and healthy."
+              ratio={1.5}
+              caption="A production environment subdivided into two regional slots, each reporting for itself. Drift is a field with an answer in it — here, “matches what was asked for”."
+            />
+          </div>
         </Section>
 
         {/* ---------------------------------------------------------------- */}
@@ -419,6 +425,7 @@ export default function Home() {
               src="/portal/component-light.png"
               srcDark="/portal/component-dark.png"
               alt="A component page in the Portal showing its blueprint, owner and a relations graph of what it consumes and depends on."
+              ratio={1.6}
             />
           </div>
         </Section>
@@ -528,6 +535,16 @@ export default function Home() {
                 </p>
               </div>
             ))}
+          </div>
+
+          <div className="mt-12">
+            <PortalShot
+              src="/portal/releases-light.png"
+              srcDark="/portal/releases-dark.png"
+              alt="A release in the Portal walking from dev through test and staging, with production waiting on an ordered deployment across its eu-west and eu-north slots."
+              ratio={2.6}
+              caption="One release, frozen to an artifact digest, walking the environments. Production is the last stop and takes its slots in order — which is what makes “where was this tested before production” a question with an answer."
+            />
           </div>
         </Section>
 
