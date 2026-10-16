@@ -28,8 +28,8 @@ export default function NotFound() {
               Nothing is declared at this address
             </h1>
             <p className="mt-5 text-pretty leading-relaxed text-muted-foreground">
-              The page has moved, or it never existed. The documentation lives in
-              the platform repository, and the links below go straight to it.
+              The page has moved, or it never existed. The install guide lives in
+              the deploy repository, and the links below go straight to it.
             </p>
 
             <div className="mt-8 flex justify-center">

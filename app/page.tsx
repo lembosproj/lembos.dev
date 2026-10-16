@@ -174,7 +174,7 @@ export default function Home() {
             <div className="mx-auto max-w-3xl text-center">
               <div className="flex justify-center">
                 <Link
-                  href={site.repo}
+                  href={site.org}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group inline-flex max-w-full items-center gap-2 rounded-full border bg-card/80 py-1 pl-1.5 pr-3 text-xs backdrop-blur transition-colors hover:border-foreground/20"
@@ -207,9 +207,9 @@ export default function Home() {
 
               <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
                 <Button size="lg" asChild>
-                  <Link href={site.repo} target="_blank" rel="noopener noreferrer">
+                  <Link href={site.deploy} target="_blank" rel="noopener noreferrer">
                     <GitHubIcon className="mr-2 h-4 w-4" />
-                    Read the source
+                    Install Lembos
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
@@ -396,15 +396,9 @@ export default function Home() {
                   documented per module and kept current with the code.
                 </p>
               </div>
-              <Link
-                href={`${site.repo}/tree/main/docs/domain`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center text-sm font-medium text-primary hover:underline"
-              >
-                Read the domain docs
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-              </Link>
+              <p className="mt-4 text-sm font-medium text-muted-foreground">
+                Published with the platform source
+              </p>
             </Card>
           </div>
 
@@ -451,18 +445,6 @@ export default function Home() {
             ))}
           </div>
 
-          <p className="mt-8 text-sm text-muted-foreground">
-            Feature by feature, each mapped to the module that carries it —{" "}
-            <Link
-              href={`${site.repo}/blob/main/docs/features.md`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              What Lembos does
-            </Link>
-            .
-          </p>
         </Section>
 
         {/* ---------------------------------------------------------------- */}
@@ -568,10 +550,18 @@ export default function Home() {
           </div>
 
           <p className="mt-8 max-w-3xl text-pretty leading-relaxed text-muted-foreground">
-            Running it today means running the solution itself — the repository
-            covers that. A packaged install, the chart that turns this into a
-            platform your organisation operates, is still ahead of it, and the
-            configuration is already shaped for it.
+            It installs with a Helm chart — the four services, a setup job that
+            makes every secret and key, and PostgreSQL, Redis and Temporal run
+            simply, highly available or as services you already have. The{" "}
+            <Link
+              href={site.deploy}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              deploy repository
+            </Link>{" "}
+            covers it, down to running it on a local k3s.
           </p>
         </Section>
 
@@ -585,28 +575,25 @@ export default function Home() {
           />
           <div className="container relative py-20 text-center md:py-28">
             <h2 className="text-balance text-3xl font-semibold tracking-tight md:text-4xl">
-              The reasoning is in the open too
+              The reasoning will be in the open too
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-pretty leading-relaxed text-muted-foreground">
               Decision records state why the architecture is the way it is, one
               document per decision. Enhancement proposals hold the changes not
-              yet decided. Both are in the repository, and both take comments.
+              yet decided. Both are published with the platform source; until
+              then, the chart that installs it is public.
             </p>
 
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Button size="lg" asChild>
-                <Link href={site.repo} target="_blank" rel="noopener noreferrer">
+                <Link href={site.deploy} target="_blank" rel="noopener noreferrer">
                   <GitHubIcon className="mr-2 h-4 w-4" />
-                  lembosproj/platform
+                  lembosproj/deploy
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link
-                  href={`${site.repo}/tree/main/docs/architecture-decisions`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Read the decision records
+                <Link href={site.org} target="_blank" rel="noopener noreferrer">
+                  Follow on GitHub
                 </Link>
               </Button>
             </div>

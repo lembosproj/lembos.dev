@@ -46,7 +46,7 @@ export function SiteHeader() {
             asChild
           >
             <Link
-              href={site.repo}
+              href={site.org}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Lembos on GitHub"
@@ -55,8 +55,8 @@ export function SiteHeader() {
             </Link>
           </Button>
           <Button size="sm" className="ml-1 hidden sm:inline-flex" asChild>
-            <Link href={site.repo} target="_blank" rel="noopener noreferrer">
-              Read the source
+            <Link href={site.deploy} target="_blank" rel="noopener noreferrer">
+              Install
             </Link>
           </Button>
 
@@ -87,9 +87,9 @@ export function SiteHeader() {
               </nav>
               <div className="mt-6 flex flex-col gap-2 border-t pt-6">
                 <Button asChild>
-                  <Link href={site.repo} target="_blank" rel="noopener noreferrer">
+                  <Link href={site.deploy} target="_blank" rel="noopener noreferrer">
                     <GitHubIcon className="mr-2 h-4 w-4" />
-                    Read the source
+                    Install
                   </Link>
                 </Button>
                 <Button variant="outline" asChild>

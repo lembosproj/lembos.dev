@@ -29,7 +29,7 @@ export function WipBanner() {
           </span>
           <span className="sm:hidden">Lembos is pre-1.0. </span>
           <Link
-            href={site.repo}
+            href={site.org}
             target="_blank"
             rel="noopener noreferrer"
             className="whitespace-nowrap text-primary underline-offset-4 hover:underline"

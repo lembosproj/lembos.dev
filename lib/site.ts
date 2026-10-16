@@ -10,7 +10,9 @@ export const site = {
   tagline: "The control plane for how software is deployed, configured and governed.",
   description:
     "Lembos is an open-source internal developer platform built on versioned building blocks. It records what should be running, observes what is, and closes the gap.",
-  repo: "https://github.com/lembosproj/platform",
+  // The platform repository is private until its first public release; the
+  // chart that installs it is the public entry point until then.
+  deploy: "https://github.com/lembosproj/deploy",
   org: "https://github.com/lembosproj",
   email: "info@lembos.dev",
   license: "Apache 2.0",
@@ -25,15 +27,14 @@ export const nav = [
 ] as const
 
 export const docsLinks = [
-  { href: `${site.repo}/blob/main/docs/features.md`, label: "What Lembos does" },
-  { href: `${site.repo}/tree/main/docs/domain`, label: "Domain model" },
-  { href: `${site.repo}/tree/main/docs/architecture-decisions`, label: "Decision records" },
-  { href: `${site.repo}/tree/main/leps`, label: "Enhancement proposals" },
+  { href: site.deploy, label: "Installing Lembos" },
+  { href: `${site.deploy}/blob/main/charts/lembos/README.md`, label: "The Helm chart" },
+  { href: `${site.deploy}/blob/main/charts/lembos/README.md#running-on-a-local-k3s`, label: "Running on a local k3s" },
 ] as const
 
 export const projectLinks = [
-  { href: `${site.repo}/blob/main/CONTRIBUTING.md`, label: "Contributing" },
-  { href: `${site.repo}/blob/main/CODE-OF-CONDUCT.md`, label: "Code of conduct" },
-  { href: `${site.repo}/blob/main/CLA.md`, label: "Contributor licence agreement" },
-  { href: `${site.repo}/blob/main/LICENSE`, label: "Apache 2.0 licence" },
+  { href: `${site.deploy}/blob/main/CONTRIBUTING.md`, label: "Contributing" },
+  { href: `${site.deploy}/blob/main/CODE-OF-CONDUCT.md`, label: "Code of conduct" },
+  { href: `${site.deploy}/blob/main/CLA.md`, label: "Contributor licence agreement" },
+  { href: `${site.deploy}/blob/main/LICENSE`, label: "Apache 2.0 licence" },
 ] as const

@@ -74,7 +74,7 @@ export function SiteFooter() {
           <p>
             Released under the{" "}
             <Link
-              href={`${site.repo}/blob/main/LICENSE`}
+              href={`${site.deploy}/blob/main/LICENSE`}
               target="_blank"
               rel="noopener noreferrer"
               className="underline underline-offset-4 transition-colors hover:text-foreground"
