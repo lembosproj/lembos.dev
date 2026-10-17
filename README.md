@@ -41,6 +41,19 @@ pnpm runs every script under Node 22.12 (`pnpm-workspace.yaml`), downloading
 it if needed — Fumadocs' build loaders are ES modules that Next loads with
 `require()`, which older Node cannot do.
 
+## Testing
+
+```shell
+pnpm --filter frontend exec playwright install chromium   # once per machine
+pnpm test         # builds the site, then runs the tests against the export
+```
+
+The tests in `src/frontend/tests/` are smoke tests for what a dependency
+update can break without the build noticing: every page renders, every
+screenshot loads, the menus open, search answers, and the docs sidebar stays
+on screen. Every pull request runs them; a Dependabot minor or patch update
+that passes merges and deploys itself, and a major waits for a person.
+
 ## Layout
 
 | Path                              | What it is                                                     |

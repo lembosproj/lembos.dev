@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter frontend dev",
-    "build": "pnpm --filter frontend build"
+    "build": "pnpm --filter frontend build",
+    "test": "pnpm build && pnpm --filter frontend test"
   }
 }
