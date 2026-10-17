@@ -15,10 +15,12 @@ function Screenshot({
   name,
   alt,
   ratio,
+  address,
 }: {
   name: string
   alt: string
   ratio?: number
+  address?: string
 }) {
   return (
     <PortalShot
@@ -26,6 +28,7 @@ function Screenshot({
       srcDark={`/portal/${name}-dark.png`}
       alt={alt}
       ratio={ratio}
+      address={address}
       className="not-prose my-6"
     />
   )

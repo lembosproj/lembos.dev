@@ -32,6 +32,7 @@ export function PortalShot({
   srcDark,
   alt,
   caption,
+  address = "portal.lembos.dev",
   ratio = SHOT_WIDTH / SHOT_HEIGHT,
   priority = false,
   className,
@@ -40,6 +41,8 @@ export function PortalShot({
   srcDark?: string
   alt: string
   caption?: string
+  /** What the frame's address bar reads — another site than the Portal, such as its mail catcher. */
+  address?: string
   /** Width ÷ height of the visible crop. Higher is shorter. */
   ratio?: number
   priority?: boolean
@@ -56,7 +59,7 @@ export function PortalShot({
           <span className="h-2.5 w-2.5 rounded-full bg-foreground/15" />
           <span className="h-2.5 w-2.5 rounded-full bg-foreground/15" />
           <span className="ml-3 truncate font-mono text-[11px] text-muted-foreground">
-            portal.lembos.dev
+            {address}
           </span>
         </div>
 

@@ -1,0 +1,242 @@
+---
+title: Walkthrough
+description: From an empty quickstart to a running service — a team, a cluster, an environment, a database, a cache, and a component wired to them, all through the Portal.
+---
+
+This page takes the [quickstart](/docs/quickstart) from empty to a service running in its cluster, with the
+database and the cache it needs, every step through the Portal. Along the way it builds what a real platform
+team builds first: the recipe for an environment, the environment itself, and the recipes teams build on.
+
+By the end you will have:
+
+- a team, **Checkout Squad**, with a new member who accepted her invitation by email;
+- the quickstart's own cluster registered as an **execution target**;
+- an **environment**, `northwind/dev`, built on that cluster from a landing zone that installs the PostgreSQL and
+  Redis operators and gives each slot its own namespace, quota and PostgreSQL cluster;
+- a **database** and a **cache**, provisioned in that environment from what it says it provides;
+- a **component**, `checkout/cart-service`, released into the environment and handed where its database and cache
+  are — without anybody typing an address.
+
+The charts used throughout are Northwind's, the sample organisation's, published at
+`ghcr.io/lembosproj/northwind/charts`. Every screen below is from a real run.
+
+<Callout title="It runs on its own, too">
+  This walkthrough is also a test. In the [deploy repository](https://github.com/lembosproj/deploy),
+  `aspire/Lembos.Deploy.Walkthrough/run.sh --fresh` wipes the quickstart and does everything on this page through
+  the Portal, then checks the result in the cluster — in about fifteen minutes. It is how these screenshots are
+  made.
+</Callout>
+
+## Before you start
+
+Start the quickstart and sign in as `admin@lembos.local`, as [the quickstart](/docs/quickstart) describes. Start
+from a fresh one: the walkthrough creates every name it uses.
+
+## 1. Bring in a team
+
+Under **Organization → Users**, **Invite user** creates the person. The account they sign in with is theirs to
+activate.
+
+<Screenshot name="walkthrough-invite" alt="The Invite user sheet: Ada Lovelace, ada@northwind.example, described as a checkout engineer." />
+
+The invitation lands in the quickstart's mail catcher — the `mailpit` resource in the Aspire dashboard. Nothing
+leaves your machine.
+
+<Screenshot name="walkthrough-invite-email" ratio={2.28} address="localhost — MailPit" alt="The invitation email to ada@northwind.example, welcoming Ada Lovelace, with a button to confirm her email." />
+
+Its link opens Identity, where she sets her password and the account becomes active.
+
+<Screenshot name="walkthrough-accept-invite" ratio={1.1} address="identity.lembos.dev" alt="Identity's Accept Invite page: Welcome, Ada Lovelace — set a password and confirm it to activate the account." />
+
+Under **Organization → Groups**, create **Checkout Squad**, then **Add member** for Ada and for yourself. A group
+owns what its members build, and you will act on the squad's work for the rest of this page.
+
+<Screenshot name="walkthrough-group-members" ratio={3.9} alt="Checkout Squad's members: Ada Lovelace and Global Admin, both active." />
+
+## 2. Register the cluster
+
+Lembos deploys into **execution targets** — clusters and cloud accounts it holds a credential for. Here the target
+is the cluster the quickstart runs in.
+
+Under **Platform → Execution targets**, **Register target**: a **Kubernetes cluster**, reached with a
+**Kubeconfig**, owned by **Platform**. Paste the kubeconfig the platform's own pods reach the cluster with — the
+quickstart writes it to `aspire/Lembos.Deploy.AppHost/.k3s/k3s/container/kubeconfig.yaml`. It addresses the API
+server as `k3s:6443`; the one under `local/` says `127.0.0.1`, which is your machine, not the pod's.
+
+<Screenshot name="walkthrough-register-target" alt="The Register target sheet: platform/local-k3s, a Kubernetes cluster reached by kubeconfig, owned by Platform." />
+
+The platform checks it at once.
+
+<Screenshot name="walkthrough-target" ratio={2} alt="platform/local-k3s, reachable: Kubernetes v1.36.4+k3s1, verified just now." />
+
+## 3. Write the environment's recipe
+
+A **blueprint** is a versioned recipe. An **environment blueprint** builds an environment: here, a level shared by
+the whole environment and a level built again at every **slot** — a region, a market, a tenant.
+
+Under **Platform → Blueprints**, **New blueprint**: `platform/cluster-landing-zone`, an **Environment** blueprint,
+provisioned with **Helm**, owned by **Platform**.
+
+On its **Versions** tab, start version `1.1.0`:
+
+- **The artifact** — Northwind's `cluster-landing-zone` chart, `1.1.0`, from `ghcr.io`. It installs the
+  CloudNativePG and Redis operators.
+- **Applying it** — Helm, pinned to `3.16.2`, so the recipe applies the same way a year from now.
+- **The slot level** — the `cluster-slot` chart at the same version: each slot's quota, network policy, workload
+  identity, and its own PostgreSQL cluster.
+
+<Screenshot name="walkthrough-landing-zone-slot-source" alt="The slot level's source: the cluster-slot chart from ghcr.io, tag 1.1.0." />
+
+**Import from source** reads each chart's inputs from its values. The environment level keeps one, `redis`: the
+image every cache runs. At the slot level, the blueprint answers `stage` and `dimensions` itself, from the
+environment, and leaves `quota` and `postgres` to each environment to say.
+
+<Screenshot name="walkthrough-landing-zone-input-postgres" alt="The slot level's postgres input, left whole to the environment: its cluster name, instances, storage and image, each with the chart's default." />
+
+Then what it **promises** whatever runs on it — its outputs, read from the values it was built with, so they cannot
+say anything but what it installed:
+
+- `redis_image`, at the environment level, read from `values.redis.image`;
+- `postgres_cluster`, at the slot level, read from `values.postgres.name`.
+
+<Screenshot name="walkthrough-landing-zone-output-postgres" alt="Adding the slot output postgres_cluster: published by reference, read from values.postgres.name." />
+
+**Publish** it. Content is frozen at publish; correcting it later means another version.
+
+<Screenshot name="walkthrough-landing-zone-published" alt="cluster-landing-zone 1.1.0, published and current: its chart, Helm 3.16.2, the redis input, the redis_image output, and the slot level's chart and inputs." />
+
+## 4. Build the environment
+
+Under **Platform → Environments**, create `northwind/dev`: stage **Development**, type **Shared**, owned by
+**Platform**. Its first version names what it runs on — `platform/local-k3s` — and what it is built from —
+`cluster-landing-zone` 1.1.0.
+
+<Screenshot name="walkthrough-environment-new-version" alt="The new version sheet for northwind/dev: version 1.0.0 on the execution target platform/local-k3s." />
+
+Rename its one slot `eu-west` and give it a dimension, `region: eu-west`. A slot's name is also its namespace on a
+cluster target, so everything placed in this slot lands in `eu-west`.
+
+<Screenshot name="walkthrough-environment-slot" alt="The slot sheet: named eu-west, with the dimension region set to eu-west, schedulable." />
+
+**Publish** it, and its release builds it: the operators first, then the slot. A couple of minutes later the slot
+is healthy, and the environment has recorded what its landing zone promised.
+
+<Screenshot name="walkthrough-environment" ratio={1.6} alt="northwind/dev: version 1.0.0 deployed on platform/local-k3s, its one slot eu-west healthy, with one environment output and one slot output." />
+
+## 5. Write recipes that read the environment
+
+Two **Resource** blueprints, `platform/postgres-database` and `platform/redis-instance`, each from its Northwind
+chart at `1.0.0` and pinned to Helm `3.16.2`.
+
+Each one **runs on** `platform/cluster-landing-zone`. Naming it is what lets a blueprint read what the landing zone
+publishes — and what keeps it from ever being placed in an environment that does not have the operator it needs.
+
+<Screenshot name="walkthrough-postgres-runs-on" alt="The Runs on sheet for postgres-database 1.0.0: platform/cluster-landing-zone chosen." />
+
+After importing its inputs, the database's `cluster` is answered by the blueprint with a reference,
+`environment.outputs.postgres_cluster`, so it is created in whichever cluster the slot says it has. Its outputs say
+where it is and how to connect:
+
+| Output       | Read from                                                                        |
+|--------------|----------------------------------------------------------------------------------|
+| `endpoint`   | `{{ values.cluster }}-rw.{{ release.namespace }}.svc:5432/{{ release.name }}`    |
+| `url`        | `postgresql://{{ values.owner }}@…`, the same without the password              |
+| `secret_ref` | `{{ values.cluster }}-app`, the secret the operator writes the credentials to   |
+
+<Screenshot name="walkthrough-postgres-published" alt="postgres-database 1.0.0: cluster read from environment.outputs.postgres_cluster, owner and reclaim left to the spec, three outputs, running on the landing zone." />
+
+The cache is the same shape: its `image` is `environment.outputs.redis_image`, so the platform chooses it once per
+environment, and it publishes an `endpoint` and a `url`.
+
+<Screenshot name="walkthrough-redis-input-image" alt="The redis-instance image input: answered by the blueprint, by reference to environment.outputs.redis_image." />
+
+## 6. Write the service recipe
+
+`platform/web-service` is a **Component** blueprint, from Northwind's `web-service` chart `2.8.0`. Most of its
+inputs are the team's to set. The blueprint answers the ones that are the platform's: who and where the component
+is, and the build being rolled out — `artifact.repository`, `artifact.tag`, `artifact.digest`.
+
+<Screenshot name="walkthrough-web-service-input-lembos" alt="The web-service lembos input: component, environment, stamp and specVersion, each answered by the blueprint with a reference." />
+
+It publishes where it is reached, so a component that calls it can read the address rather than build it.
+
+<Screenshot name="walkthrough-web-service-output" alt="Adding the clusterEndpoint output: a template naming the service in its slot's namespace." />
+
+**Publish** it.
+
+<Screenshot name="walkthrough-web-service-published" alt="web-service 2.8.0 published: its chart, Helm 3.16.2, and its inputs — the platform's answered, the team's left to the spec." />
+
+## 7. Put the service in the catalog
+
+Under **Workspace**, as Checkout Squad:
+
+- a **software system**, `checkout/storefront`;
+- a **component**, `checkout/cart-service`, in that system, built from `platform/web-service`;
+- two **resources** in the same system: `checkout/cart-db` from `platform/postgres-database`, and `checkout/cart-cache`
+  from `platform/redis-instance`.
+
+<Screenshot name="walkthrough-new-component" alt="The New component sheet: checkout/cart-service, owned by Checkout Squad, in the storefront system, built from platform/web-service." />
+
+A component ships **builds** — artifacts. A pipeline records one when it builds it; here, under
+**Platform → Artifacts**, **Publish artifact** records Northwind's cart-service image `1.1.0` by its digest.
+
+<Screenshot name="walkthrough-publish-artifact" alt="The Publish artifact sheet: an OCI image for checkout/cart-service, ghcr.io/lembosproj/northwind/apps/cart-service, tag 1.1.0, with its digest and source commit." />
+
+## 8. Provision the database and the cache
+
+A resource is configured by its **spec**. On each resource's **Versions** tab, **Declare a spec** owned by Checkout
+Squad, start version `1.0.0`, and **Add environment**: `northwind/dev`, slot `eu-west`.
+
+<Screenshot name="walkthrough-cart-db-placement" alt="Placing cart-db's spec version 1.0.0: northwind/dev, in the eu-west slot." />
+
+Nothing else to say: the database's cluster comes from the environment, and its owner and reclaim policy keep their
+defaults. **Publish** each spec version, and its release provisions it: a database `cart-db` in the slot's
+`postgres` cluster, and a Redis `cart-cache` running the environment's image.
+
+## 9. Wire the service and release it
+
+On the component's **Dependencies** tab, it **needs** both resources to run. Only a declared dependency's outputs
+can be read.
+
+<Screenshot name="walkthrough-component-dependencies" alt="cart-service's dependencies: it needs checkout/cart-db and checkout/cart-cache to run." />
+
+Declare its spec, start `1.0.0` and place it in `northwind/dev`'s `eu-west` slot, as for the resources. Then edit
+**resourceBindings**: one entry per resource, each field answered from a **Dependency**'s output.
+
+| Binding  | Field       | Reads                      |
+|----------|-------------|----------------------------|
+| `cartDb` | `endpoint`  | `checkout/cart-db` → `endpoint`   |
+| `cartDb` | `url`       | `checkout/cart-db` → `url`        |
+| `cartDb` | `secretRef` | `checkout/cart-db` → `secret_ref` |
+| `cache`  | `endpoint`  | `checkout/cart-cache` → `endpoint` |
+| `cache`  | `url`       | `checkout/cart-cache` → `url`      |
+
+<Screenshot name="walkthrough-cart-service-bindings" alt="The resourceBindings sheet: cartDb's endpoint, url and secretRef read from checkout/cart-db's outputs, and cache's endpoint and url from checkout/cart-cache's." />
+
+**Publish** the spec version. On the **Releases** tab, **New release**: build `1.1.0`, spec `1.0.0`, and
+**Create and deploy**.
+
+<Screenshot name="walkthrough-cart-service-new-release" alt="The Create a new release panel: artifact 1.1.0, spec version 1.0.0 in force, and a description." />
+
+The release walks the spec version's path — one stop, `northwind/dev` — and deploys.
+
+<Screenshot name="walkthrough-cart-service-released" ratio={4.4} alt="cart-service's releases: one, deployed to northwind/dev, artifact 1.1.0 and spec 1.0.0, in 19 seconds." />
+
+## See it in the cluster
+
+```bash
+source scripts/k3s-env.sh
+kubectl -n eu-west get pods
+kubectl -n eu-west exec deploy/checkout-cart-service-eu-west -- printenv | grep -E '^(CART_DB|CACHE)_'
+```
+
+The service is running beside its database cluster and its cache, and it was handed where each one is:
+`CART_DB_ENDPOINT`, `CART_DB_URL` and `CART_DB_SECRET_REF`, its credentials as `CART_DB_USERNAME` and
+`CART_DB_PASSWORD` from the secret the operator wrote, and `CACHE_ENDPOINT` and `CACHE_URL`. Nobody typed an
+address: the landing zone said which cluster each slot has, the database said where it is, and the binding read it.
+
+## Next
+
+- [Concepts](/docs/concepts) — the model behind what you just built.
+- [Environments](/docs/use/environments) — slots, waves and leases.
+- [Configure and ship](/docs/use/delivery) — specs, releases and promotions in depth.
