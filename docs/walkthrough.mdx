@@ -139,8 +139,8 @@ where it is and how to connect:
 
 | Output       | Read from                                                                        |
 |--------------|----------------------------------------------------------------------------------|
-| `endpoint`   | `{{ values.cluster }}-rw.{{ release.namespace }}.svc:5432/{{ release.name }}`    |
-| `url`        | `postgresql://{{ values.owner }}@…`, the same without the password              |
+| `endpoint`   | `{{ values.cluster }}-rw.{{ release.namespace }}.svc:5432`, host and port        |
+| `url`        | `postgresql://{{ values.owner }}@…/{{ release.name }}`, without the password    |
 | `secret_ref` | `{{ values.cluster }}-app`, the secret the operator writes the credentials to   |
 
 <Screenshot name="walkthrough-postgres-published" alt="postgres-database 1.0.0: cluster read from environment.outputs.postgres_cluster, owner and reclaim left to the spec, three outputs, running on the landing zone." />
@@ -213,6 +213,11 @@ Declare its spec, start `1.0.0` and place it in `northwind/dev`'s `eu-west` slot
 
 <Screenshot name="walkthrough-cart-service-bindings" alt="The resourceBindings sheet: cartDb's endpoint, url and secretRef read from checkout/cart-db's outputs, and cache's endpoint and url from checkout/cart-cache's." />
 
+The draft reads them back an entry and a field at a time, each field saying which output it reads, beside where the
+version is placed and what it is built against:
+
+<Screenshot name="walkthrough-cart-service-spec-draft" alt="cart-service's spec draft 1.0.0: built against web-service 2.8.0, placed in northwind/dev's eu-west slot, and its resourceBindings — cache with two fields and cartDb with three, each read from a resource output." />
+
 **Publish** the spec version. On the **Releases** tab, **New release**: build `1.1.0`, spec `1.0.0`, and
 **Create and deploy**.
 
@@ -234,6 +239,28 @@ The service is running beside its database cluster and its cache, and it was han
 `CART_DB_ENDPOINT`, `CART_DB_URL` and `CART_DB_SECRET_REF`, its credentials as `CART_DB_USERNAME` and
 `CART_DB_PASSWORD` from the secret the operator wrote, and `CACHE_ENDPOINT` and `CACHE_URL`. Nobody typed an
 address: the landing zone said which cluster each slot has, the database said where it is, and the binding read it.
+
+## Call the service
+
+The chart publishes the service through the quickstart's ingress as `checkout-cart-service.dev.local` — its
+component's name and its environment's. Your machine does not resolve that name, but the ingress answers on
+`localhost`, so name the host in the request:
+
+| Path            | What it answers                                                                    |
+|-----------------|------------------------------------------------------------------------------------|
+| `/`             | The component, and the spec version it runs                                        |
+| `/identity`     | Which component, environment, slot and spec version it is, and the bindings it has |
+| `/readyz`       | Ready only while every binding names somewhere to connect                          |
+| `/dependencies` | Whether it reaches each binding — the database and the cache — and how fast        |
+
+```bash
+curl -s -H 'Host: checkout-cart-service.dev.local' http://localhost/
+curl -s -H 'Host: checkout-cart-service.dev.local' http://localhost/identity
+curl -s -H 'Host: checkout-cart-service.dev.local' http://localhost/readyz
+curl -s -H 'Host: checkout-cart-service.dev.local' http://localhost/dependencies
+```
+
+`/dependencies` is the one that matters here: both checks `reachable`, so what the platform wired is what works.
 
 ## Next
 
