@@ -1,24 +1,56 @@
 "use client"
 
-import { useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { X } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import { site } from "@/lib/site"
 
 /**
  * The honest status line: what has been released, and that it is early.
  *
- * Above the sticky header rather than inside it, so it scrolls away and the
- * notice is not permanently spending the top of every viewport.
+ * On the landing page it sits above the sticky header rather than inside it,
+ * so it scrolls away and the notice is not permanently spending the top of
+ * every viewport.
+ *
+ * In the docs it is `pinned`. Fumadocs' sidebar and table of contents are
+ * sticky and exactly one viewport tall, offset by `--fd-banner-height`; a
+ * banner that scrolled, or that left the variable unset, pushed the sidebar's
+ * foot — the theme switch — below the screen.
  */
-export function WipBanner() {
+export function WipBanner({ pinned = false }: { pinned?: boolean }) {
   const [visible, setVisible] = useState(true)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Measured rather than fixed, because the line wraps on a phone.
+  useLayoutEffect(() => {
+    const banner = ref.current
+    if (!pinned || !banner) return
+
+    const root = document.documentElement
+    const observer = new ResizeObserver(() =>
+      root.style.setProperty("--fd-banner-height", `${banner.offsetHeight}px`),
+    )
+    observer.observe(banner)
+
+    return () => {
+      observer.disconnect()
+      root.style.removeProperty("--fd-banner-height")
+    }
+  }, [pinned, visible])
 
   if (!visible) return null
 
   return (
-    <div className="relative border-b border-primary/20 bg-primary/[0.07]">
+    <div
+      ref={ref}
+      className={cn(
+        // The tint is laid over the page background so a pinned banner hides what scrolls beneath it.
+        "relative border-b border-primary/20 bg-background bg-[linear-gradient(hsl(var(--primary)/0.07),hsl(var(--primary)/0.07))]",
+        pinned && "sticky top-0 z-40",
+      )}
+    >
       <div className="container flex items-center justify-center gap-x-2 py-2 pr-8 text-center text-xs sm:text-sm">
         <span className="hidden h-1.5 w-1.5 shrink-0 rounded-full bg-primary sm:block" />
         <p className="text-pretty text-muted-foreground">

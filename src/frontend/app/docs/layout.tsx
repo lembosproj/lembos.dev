@@ -9,7 +9,7 @@ import { site } from "@/lib/site"
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <>
-      <WipBanner />
+      <WipBanner pinned />
       <DocsLayout
         tree={source.getPageTree()}
         nav={{ title: <BrandMark size="sm" />, url: "/" }}
