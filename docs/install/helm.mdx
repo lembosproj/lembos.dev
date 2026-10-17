@@ -9,7 +9,7 @@ Two values have no default: the **domain** every service is published under, and
 sends invitations and password resets.
 
 ```bash
-helm upgrade --install lembos oci://ghcr.io/lembosproj/charts/lembos --version 0.1.0 \
+helm upgrade --install lembos oci://ghcr.io/lembosproj/charts/lembos --version {{chartVersion}} \
   --namespace lembos --create-namespace \
   --set global.domain=idp.example.com \
   --set identity.smtp.endpoint=smtp://relay.example.com:25
@@ -31,6 +31,10 @@ complete high-available example.
 Each published service answers at `<service>.<global.domain>` — `portal.idp.example.com` and so on — or at
 its own `host` if you set one. These names matter: sign-in redirects and token issuers are derived from
 them, so they must be the names people's browsers use.
+
+If your ingress answers on a port other than 443, set `global.publicPort`. Every address Lembos derives
+carries it — the token issuer, sign-in redirects, allowed origins — so the ingress must answer on that port
+from inside the cluster too.
 
 The services also call Identity at its **public** address from inside the cluster, so that name must
 resolve there and its certificate must be trusted:

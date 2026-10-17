@@ -1,112 +1,95 @@
 ---
 title: Quickstart
-description: Run Lembos on your laptop, on a local k3s cluster.
+description: Run Lembos on your laptop with one command — a local k3s cluster, the chart, and Grafana over it.
 ---
 
-This puts a complete Lembos on a local Kubernetes cluster: one pod per service, PostgreSQL, Redis and
-Temporal beside them, a mail catcher for invitations, and TLS from a certificate authority the install
-generates. It is the fastest way to see the Portal with your own eyes.
+One command puts a complete Lembos on your machine: a k3s cluster in Docker with the Helm chart installed
+into it, one pod per service and Temporal in the release, PostgreSQL, Redis and a mail catcher beside it, and
+Grafana over its traces, logs and metrics. It is served under `*.dev.localhost` with the developer
+certificate your machine already trusts, so there is nothing to import.
+
+It is the chart a production install uses, observed the way a production install would be — the fastest way
+to see the Portal with your own eyes, and to see what running it looks like.
 
 ## What you need
 
-- Helm 3 and `kubectl`
-- Git, to fetch the chart
-- A k3s cluster with about **4 CPUs and 8 GiB of memory** to spare:
-  - **macOS** — [colima](https://github.com/abiosoft/colima) with Kubernetes:
+- Docker with about **4 CPUs and 8 GiB of memory** to spare
+- The [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- The [Aspire CLI](https://aspire.dev), with its developer certificate trusted:
 
-    ```bash
-    colima start --kubernetes --cpu 4 --memory 8
-    kubectl config use-context colima
-    ```
+  ```bash
+  aspire certs trust
+  ```
 
-  - **Linux** — [k3s](https://docs.k3s.io/quick-start) itself.
+- Ports **80, 443 and 3000** free — the ingress publishes on 80 and 443, Grafana on 3000
+- `kubectl`, optionally, for looking inside the cluster
 
-## 1. Install
+## 1. Start
 
 ```bash
 git clone https://github.com/lembosproj/deploy && cd deploy
-
-helm repo add dandydeveloper https://dandydeveloper.github.io/charts
-helm repo add temporal https://go.temporal.io/helm-charts
-helm dependency build charts/lembos
-
-helm upgrade --install lembos charts/lembos -n lembos --create-namespace \
-  -f charts/lembos/values-k3s.yaml
+aspire start
 ```
 
-## 2. Let the cluster find itself
+The Aspire dashboard's link is printed. The first start takes several minutes, most of it pulling images;
+the `lembos` resource finishes once every pod is ready. Starting again later is quicker: the cluster keeps
+its data, and each start upgrades the release to the chart and values in the checkout.
 
-Once per cluster, restart CoreDNS so `*.lembos.localhost` resolves to the ingress inside the cluster as well
-as outside it:
+## 2. Sign in
+
+Open [https://portal.dev.localhost](https://portal.dev.localhost) and sign in as `admin@lembos.local`. The
+password was generated for you:
 
 ```bash
-kubectl -n kube-system rollout restart deployment/coredns
+source scripts/k3s-env.sh     # points kubectl at the cluster, and adds `k` for the lembos namespace
+lembos-admin-password
 ```
 
-## 3. Wait for it to come up
+| What      | Where                                          |
+|-----------|------------------------------------------------|
+| Portal    | `https://portal.dev.localhost`                 |
+| Sign-in   | `https://identity.dev.localhost`               |
+| GraphQL   | `https://orchestrator.dev.localhost/graphql`   |
+| Workflows | `https://temporal.dev.localhost`               |
+| Grafana   | `http://localhost:3000`                        |
+| Mail      | the `mailpit` resource in the Aspire dashboard |
 
-```bash
-kubectl -n lembos get pods -w
-```
-
-The first install takes a few minutes, most of it pulling images. Some services restart once or twice
-while they wait for the database and Temporal to accept connections — that is expected.
-
-## 4. Trust the certificate
-
-Every address is served with a certificate from a CA the install generated. Trust it once:
-
-```bash
-kubectl -n lembos get secret lembos-ingress-ca -o jsonpath='{.data.ca\.crt}' | base64 -d > lembos-ca.crt
-```
-
-<Tabs items={["macOS", "Debian or Ubuntu"]}>
-  <Tab value="macOS">
-    ```bash
-    sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain lembos-ca.crt
-    ```
-  </Tab>
-  <Tab value="Debian or Ubuntu">
-    ```bash
-    sudo cp lembos-ca.crt /usr/local/share/ca-certificates/ && sudo update-ca-certificates
-    ```
-  </Tab>
-</Tabs>
-
-Firefox keeps its own store: import the file under **Settings → Certificates**.
-
-## 5. Sign in
-
-Open [https://portal.lembos.localhost](https://portal.lembos.localhost) and sign in as `admin@lembos.local`.
-The password was generated for you:
-
-```bash
-kubectl -n lembos get secret lembos-secrets -o jsonpath='{.data.identity-admin-password}' | base64 -d; echo
-```
-
-| What          | Where                                |
-|---------------|--------------------------------------|
-| Portal        | `https://portal.lembos.localhost`    |
-| Sign-in       | `https://identity.lembos.localhost`  |
-| Mail          | `https://mail.lembos.localhost`      |
-| Workflows     | `https://temporal.lembos.localhost`  |
-
-Invitations, confirmations and password resets land in the mail catcher; nothing leaves the cluster.
+Invitations, confirmations and password resets land in the mail catcher; nothing leaves your machine.
 
 <Callout title="Want something to look at?">
   The catalog starts empty. To explore with a sample organisation — an invented retailer with systems,
-  components, APIs and a two-region production environment — add `--set orchestrator.sampleData=true` to
-  the install command.
+  components, APIs and a two-region production environment — set `orchestrator.sampleData: true` in
+  `aspire/Lembos.Deploy.AppHost/values.aspire.yaml`, then `aspire stop` and `aspire start`.
 </Callout>
+
+## 3. Watch it run
+
+The services send their telemetry to Grafana, and three dashboards open on it:
+
+| Dashboard             | What it answers                                                                       |
+|-----------------------|---------------------------------------------------------------------------------------|
+| **Lembos — Platform** | Is the platform healthy? Requests, errors and latency per service, pods, logs, traces |
+| **Lembos — Service**  | Where is one service spending its time?                                               |
+| **Lembos — Temporal** | Is Temporal keeping up with the workflows Lembos gives it?                            |
+
+Metrics arrive once a minute, so a fresh start takes a couple of minutes to fill in. The dashboards ship
+with the chart, so the same ones work against the Grafana in your own cluster.
 
 ## Clean up
 
 ```bash
-helm uninstall lembos -n lembos     # keeps the generated secrets and the data
-kubectl delete namespace lembos     # removes everything, the CA included
+aspire stop
 ```
+
+The cluster and its dependencies are persistent, so they keep running and keep their data. To remove them
+for a fresh start, follow
+[Tear down](https://github.com/lembosproj/deploy/blob/main/charts/lembos/README.md#tear-down) in the chart's
+README.
+
+If something does not come up, the chart's README has
+[what to look at](https://github.com/lembosproj/deploy/blob/main/charts/lembos/README.md#when-something-is-wrong).
 
 ## Next
 
 - [Concepts](/docs/concepts) — what you are looking at.
-- [Install](/docs/install) — the same thing in a cluster other people use.
+- [Install](/docs/install) — the same chart in a cluster other people use.

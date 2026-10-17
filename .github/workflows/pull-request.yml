@@ -34,8 +34,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # The build fetches lembosproj/deploy's releases for the docs' version numbers; authenticated, so a busy
+      # runner address is not rate-limited.
       - name: Build
         run: pnpm build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Install the test browser
         run: pnpm --filter frontend exec playwright install --with-deps chromium

@@ -13,8 +13,10 @@ new chart version that names it.
 
 ## Upgrading
 
+To the latest chart, which installs Lembos {{platformVersion}}:
+
 ```bash
-helm upgrade lembos oci://ghcr.io/lembosproj/charts/lembos --version <chart version> \
+helm upgrade lembos oci://ghcr.io/lembosproj/charts/lembos --version {{chartVersion}} \
   -n lembos -f values.yaml
 ```
 
@@ -40,3 +42,10 @@ helm upgrade lembos oci://ghcr.io/lembosproj/charts/lembos --version <chart vers
 
 Point `global.image.registry` at your mirror and add `global.imagePullSecrets`; the image paths stay the
 same.
+
+## Releases
+
+Each chart release, and the platform release it installs. The notes say what changed and what to do
+before upgrading.
+
+<Releases />

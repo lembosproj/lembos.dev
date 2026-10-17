@@ -1,0 +1,75 @@
+---
+title: Observability
+description: Send Lembos's traces, logs and metrics to your pipeline, and the Grafana dashboards that read them.
+---
+
+Every Lembos service speaks OpenTelemetry. Point them at a collector and they send traces, metrics and logs,
+each already naming its pod, Deployment, namespace and node, so nothing in the pipeline has to work out
+where it came from.
+
+## Sending telemetry
+
+```yaml
+global:
+  otel:
+    endpoint: http://otel-collector.monitoring:4317
+    protocol: grpc        # or http/protobuf
+    headers: ""           # OTLP headers, key=value,… — an API key your backend asks for, say
+```
+
+With no endpoint, nothing is exported. With network policies on, the chart already lets every service reach
+the endpoint's port.
+
+## Dashboards
+
+The chart ships three Grafana dashboards:
+
+| Dashboard             | What it answers                                                                                             |
+|-----------------------|-------------------------------------------------------------------------------------------------------------|
+| **Lembos — Platform** | Is the platform healthy? Requests, errors and latency per service, pods, the Worker's scaling, logs, traces |
+| **Lembos — Service**  | Where is one service spending its time? Each route, its pods, its runtime, its logs and traces              |
+| **Lembos — Temporal** | Is Temporal keeping up? Requests and errors, persistence latency, task queue backlog                        |
+
+If your Grafana runs the dashboard sidecar — kube-prometheus-stack and the Grafana chart both do — let the
+chart install them:
+
+```yaml
+grafanaDashboards:
+  enabled: true
+  namespace: monitoring   # where the sidecar looks, if not the release's namespace
+```
+
+Without a sidecar, import the JSON files from the chart's
+[`dashboards/`](https://github.com/lembosproj/deploy/tree/main/charts/lembos/dashboards) as they are. Each
+asks for its metrics, logs and traces data sources on import, so it assumes none of your names.
+
+## What the dashboards expect
+
+They read what an OpenTelemetry pipeline produces with three common backends:
+
+| Signal  | Backend    | What it needs                                                                            |
+|---------|------------|------------------------------------------------------------------------------------------|
+| Metrics | Prometheus | OTLP ingestion, with the service and Kubernetes resource attributes promoted to labels   |
+| Logs    | Loki 3     | OTLP ingestion                                                                           |
+| Traces  | Tempo      | Its metrics generator, writing the service graph and span metrics to the same Prometheus |
+
+The Temporal dashboard reads the bundled Temporal server's own Prometheus metrics. Turn them on, and say
+who may scrape them — with network policies on, nobody else can:
+
+```yaml
+temporal:
+  simple:
+    metrics:
+      enabled: true
+      from:                 # NetworkPolicy peers
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+```
+
+<Callout title="See it working first">
+  The [quickstart](/docs/quickstart) runs exactly this pipeline — collector, Prometheus, Loki, Tempo and
+  Grafana — next to a local install. Its
+  [configuration](https://github.com/lembosproj/deploy/tree/main/aspire/Lembos.Deploy.AppHost/observability)
+  is a working starting point to copy.
+</Callout>

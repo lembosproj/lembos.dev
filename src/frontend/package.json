@@ -6,8 +6,8 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node tools/release.mjs && next dev",
+    "build": "node tools/release.mjs && next build",
     "start": "next start",
     "test": "playwright test"
   },

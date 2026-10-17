@@ -2,6 +2,7 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs"
 import defaultMdxComponents from "fumadocs-ui/mdx"
 import type { MDXComponents } from "mdx/types"
 
+import { Releases } from "@/components/releases"
 import { PortalShot } from "@/components/site/portal-shot"
 
 /**
@@ -33,6 +34,7 @@ function Screenshot({
 export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
+    Releases,
     Screenshot,
     Tab,
     Tabs,

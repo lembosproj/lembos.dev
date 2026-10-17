@@ -17,6 +17,8 @@ node_modules
 .next/
 /src/frontend/dist/
 .source/
+# Fetched from lembosproj/deploy's releases before every build (src/frontend/tools/release.mjs)
+/src/frontend/lib/release.json
 
 # .NET
 bin/

@@ -1,3 +1,5 @@
+import release from "./release.json"
+
 /**
  * One description of the site, so the header, the footer, the metadata and any
  * page added later all agree. Docs pages are expected to join `nav` here rather
@@ -16,8 +18,9 @@ export const site = {
   org: "https://github.com/lembosproj",
   email: "info@lembos.dev",
   license: "Apache 2.0",
-  // The latest platform release, as the banner announces it. Bump with each one.
-  release: "0.0.1",
+  // The platform release the latest chart installs, as the banner announces it — fetched from the deploy
+  // repository's releases before every build (tools/release.mjs), so nobody bumps it.
+  release: release.latest.platform,
 } as const
 
 /** Section links on the landing page, then the docs. */
