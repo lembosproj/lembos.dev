@@ -23,7 +23,7 @@ export const site = {
 /** Section links on the landing page, then the docs. */
 export const nav = [
   { href: "/#what-it-is", label: "What it is" },
-  { href: "/#model", label: "The model" },
+  { href: "/#portal", label: "The Portal" },
   { href: "/#capabilities", label: "Capabilities" },
   { href: "/#how-it-is-used", label: "How it is used" },
   { href: "/docs", label: "Docs" },

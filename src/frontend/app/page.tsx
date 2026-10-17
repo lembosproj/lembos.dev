@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { SiteHeader } from "@/components/site/site-header"
 import { WipBanner } from "@/components/site/wip-banner"
 import { SiteFooter } from "@/components/site/site-footer"
-import { GitHubIcon } from "@/components/site/icons"
 import { PortalShot } from "@/components/site/portal-shot"
 import {
   AuthorizationLayers,
@@ -21,76 +20,64 @@ import {
 } from "@/components/site/primitives"
 import { site } from "@/lib/site"
 
-const modules = [
+// The Portal's three areas, as a reader meets them — not the modules the code is split into.
+const areas = [
   {
-    name: "Catalog",
-    answers: "What software exists, and how is it related?",
-    holds: ["BusinessDomain", "SoftwareSystem", "Component", "Api", "Resource"],
+    name: "Workspace",
+    who: "For product teams",
+    answers: "What software do we have, who owns it, and how does it ship?",
+    holds: ["Business domains", "Systems", "Components", "APIs", "Resources", "Releases"],
   },
   {
-    name: "Infrastructure",
-    answers: "What is it delivered with?",
-    holds: ["Blueprint", "ExecutionTarget", "Artifact"],
-  },
-  {
-    name: "Delivery",
-    answers: "How does a declaration become running software?",
-    holds: [
-      "InstanceSpec",
-      "Environment",
-      "RuntimeInstance",
-      "Deployment",
-      "Release",
-    ],
-  },
-  {
-    name: "Governance",
-    answers: "Should this happen?",
-    holds: ["Policy", "PolicyVersion", "AuditLog"],
+    name: "Platform",
+    who: "For platform, security and operations teams",
+    answers: "How is it built, where does it run, and what is allowed?",
+    holds: ["Blueprints", "Environments", "Execution targets", "Placement rules", "Policies", "Audit log"],
   },
   {
     name: "Organization",
-    answers: "Who is involved, and what may they do?",
-    holds: ["User", "Group", "Role", "Permission"],
+    who: "For administrators",
+    answers: "Who is involved, and what may each of them do?",
+    holds: ["Users", "Groups", "Roles", "Service accounts"],
   },
 ]
 
 const capabilities = [
   {
     title: "Software catalog",
-    body: "Business domains nest into a validated ladder; systems group the components, APIs and resources that form a capability. Purely definitional — declarations, never runtime facts.",
+    body: "Business areas, capabilities, systems, components, APIs and resources — with owners and dependencies, so you know what you have and who to ask.",
   },
   {
-    title: "Configuration management",
-    body: "Immutable, content-hashed revisions pinned per runtime instance, layered system → component → environment → stamp. Secrets referenced by vault path, never carried.",
+    title: "Configuration that ships with the code",
+    body: "A component's settings are part of its versioned spec, so a release pins them and a rollback takes them back. Values layer common → environment → slot, and secrets stay in your vault — Lembos holds only where to find them.",
   },
   {
-    title: "Infrastructure orchestration",
-    body: "Blueprints pin their provisioner and source, and are only offered once confirmed fetchable. A version that cannot be retrieved is never handed out and then failed on.",
+    title: "Golden paths",
+    body: "Blueprints pin the tool, its version and where the recipe lives, and are offered only once Lembos has fetched them — a recipe that cannot be retrieved never reaches a team.",
   },
   {
-    title: "Environments and stamps",
-    body: "An environment subdivides into stamps — per country for residency, per region for latency — and the workload declares how many it occupies. Ephemeral ones carry a lease and expire.",
+    title: "Environments and slots",
+    body: "Split an environment by country for data residency or by region for latency, and let each workload say which slots it needs. Review environments carry a lease and expire on their own.",
   },
   {
     title: "Progressive delivery",
-    body: "Traffic weights, analysis windows and abort thresholds are blueprint parameters, not control-plane assertions. A promotion names a stamp scope, so a geographic wave is an ordered sequence.",
+    body: "Traffic weights, analysis windows and abort thresholds live in the blueprint. A promotion can name specific slots, so a regional rollout is a series of steps with a look in between.",
   },
   {
-    title: "Rollback as its own transition",
-    body: "A rollback is a distinct kind of event from deploying an older artifact, because policy has to tell them apart — a rollback frequently bypasses gates a forward deployment must pass.",
+    title: "Rollback as its own step",
+    body: "Rolling back is recorded differently from deploying an old version, so policies can treat it differently — a rollback often has to skip gates a new release must pass.",
   },
   {
-    title: "Release provenance",
+    title: "Release history",
     body: "A release freezes its contents when it is ready and records every promotion, so “in which environments was this version tested before production?” has an answer.",
   },
   {
-    title: "Policy that can be reconstructed",
-    body: "An evaluation pins the exact policy version it enforced, so a later edit cannot silently rewrite what was applied. Policy is evaluated before dispatch, not audited after it lands.",
+    title: "Policy you can look back on",
+    body: "Every policy decision remembers the exact policy version that made it, so a later edit cannot change what was enforced. Policies are checked before work starts, not audited after.",
   },
   {
-    title: "Audit by construction",
-    body: "Every domain event is persisted as an audit entry unconditionally, whether or not anything reacts to it. The trail is a property of the model, not a feature bolted beside it.",
+    title: "A complete audit trail",
+    body: "Every change, by a person or by a machine, is recorded — whether or not anything else reacts to it. Nobody has to remember to turn it on.",
   },
 ]
 
@@ -98,56 +85,52 @@ const journeys = [
   {
     role: "A developer",
     arrives: "“I need this service running in staging.”",
-    does: "Declares the component against a blueprint and names where it belongs. The configuration layers resolve, policy is evaluated, and the work is dispatched.",
+    does: "Describes the component on a blueprint and picks where it should run. Lembos works out its settings, checks the policies and starts the deployment.",
     because:
       "The blueprint already carries the chart, the traffic weights and the dashboards — none of the runtime has to be learned to use it.",
   },
   {
     role: "A platform engineer",
     arrives: "“I need to change how every service is deployed.”",
-    does: "Publishes a new blueprint version. Nothing pinned to the old one moves until its owner moves it, and where each version is in force stays visible.",
+    does: "Publishes a new blueprint version. Nothing on the old one moves until its owner moves it, and where each version is still in use stays visible.",
     because:
-      "Versions are immutable and pinned, so the golden path can change without a synchronised migration across every team at once.",
+      "Published versions never change, so the golden path can move forward without every team migrating on the same day.",
   },
   {
     role: "Security and compliance",
     arrives: "“Show me what was running in production in March.”",
-    does: "Reads the release, the promotions that carried it, and the policy version that was evaluated at the time.",
+    does: "Reads the release, the promotions that carried it, and the policy version that was checked at the time.",
     because:
-      "Every domain event is persisted as an audit entry unconditionally, and an evaluation pins the exact policy version it enforced.",
+      "Every change is recorded, and every policy decision remembers the exact version of the policy it applied.",
   },
 ]
 
 const scenarios = [
   {
     title: "A review environment that cleans itself up",
-    body: "Ephemeral environments carry a lease and a TTL, so a pull-request environment expires on its own instead of accruing cost until someone notices.",
+    body: "Ephemeral environments carry a lease, so a pull-request environment expires on its own instead of running up a bill until someone notices.",
   },
   {
     title: "A payment provider that differs per country",
-    body: "A stamp-layer override, not a reason to fork the component or duplicate the environment. The narrowest layer wins and the rest is shared.",
+    body: "An override on that country's slot — not a fork of the component, and not a copy of the environment. The most specific setting wins and the rest is shared.",
   },
   {
     title: "A regulated workload that cannot land anywhere",
-    body: "The component requires a capability; only execution targets declaring it are eligible. Policy is evaluated before dispatch, not audited after it lands.",
+    body: "The component requires a capability, and only the clusters or accounts that declare it can take it. Policy is checked before anything runs, not audited after.",
   },
   {
     title: "Germany before France, with a look in between",
-    body: "A promotion names a stamp scope, so a geographic wave is an ordered sequence of promotions with a human able to check between them.",
+    body: "A promotion names the slots it goes to, so a regional rollout is a series of promotions with a person able to check between them.",
   },
 ]
 
-const stack = [
-  { name: ".NET 10", role: "Every service" },
-  { name: "Aspire", role: "Composition and local run" },
-  { name: "HotChocolate", role: "The GraphQL surface" },
-  { name: "Temporal", role: "Durable workflows" },
-  { name: "PostgreSQL", role: "Persistence, via EF Core" },
-  { name: "OpenIddict", role: "Identity and tokens" },
-  { name: "Blazor + MudBlazor", role: "The Portal" },
-  { name: "YARP", role: "The gateway" },
-  { name: "OpenTelemetry", role: "Traces, metrics, logs" },
-  { name: "Redis", role: "Cache and subscriptions" },
+// What an organisation brings to run Lembos, rather than what Lembos is built with.
+const operates = [
+  { name: "A Kubernetes cluster", role: "Lembos installs into it with one Helm chart" },
+  { name: "Your clouds and clusters", role: "Where it builds and deploys" },
+  { name: "Your sign-in", role: "Invitations, or your GitHub organisation" },
+  { name: "Your vault", role: "Secrets stay where they are" },
+  { name: "Its own data stores", role: "PostgreSQL, Redis and Temporal — or yours" },
 ]
 
 export default function Home() {
@@ -278,12 +261,12 @@ export default function Home() {
           <div className="mt-12 rounded-xl border bg-background-gray p-6 md:p-8">
             <p className="text-pretty leading-relaxed text-muted-foreground">
               <span className="text-foreground">
-                The catalog is purely definitional.
+                One component, different everywhere it runs.
               </span>{" "}
-              It holds declarations and never runtime facts. That boundary is
-              what lets one component run a different version in every place it
-              runs, with the per-environment truth living on a runtime instance
-              instead of forcing the catalog to describe every case.
+              The catalog says what a component is; each environment records
+              which version of it is running there. So staging can run a version
+              ahead of production, one region can stay on an older build, and
+              every one of those answers is true at once.
             </p>
           </div>
         </Section>
@@ -294,8 +277,8 @@ export default function Home() {
         <Section className="bg-background-gray">
           <SectionHeading
             eyebrow="The idea underneath"
-            title="Every building block is an entity plus immutable revisions"
-            lead="The entity is what everything names. The revision is what a deployment pins. Blueprints, configuration, API contracts, policies and environments all work this way, which is what makes the rest of the platform expressible rather than aspirational."
+            title="Everything is versioned, so nothing changes under you"
+            lead="Blueprints, configuration, API contracts, policies and environments are each published as versions. A deployment pins a version, and a published version never changes — so what you deployed is exactly what you can deploy again."
           />
 
           <div className="mt-12">
@@ -304,24 +287,23 @@ export default function Home() {
               srcDark="/portal/blueprint-versions-dark.png"
               alt="The versions of a blueprint in the Portal: 2.6.0 published and current, 2.5.0-rc.1 draft, 2.4.0 and 2.2.0 deprecated, 2.3.0 withdrawn because its artifact cannot be found."
               ratio={2.6}
-              caption="One status machine across every versioned thing. Draft is part of it, so everything has somewhere to sit before it is live — and a version whose artifact cannot be fetched is never handed out."
+              caption="Every version starts as a draft, so a change has somewhere to be reviewed before it is live — and a version whose source cannot be fetched is never offered to anyone."
             />
           </div>
 
           <dl className="mt-14 grid gap-8 md:grid-cols-3">
             <Term name="Reproducibility">
-              A published revision cannot change under anything pinned to it, so
-              replaying a deployment a month later produces the same result.
+              A published version cannot change under anything that uses it, so
+              repeating a deployment a month later produces the same result.
             </Term>
             <Term name="Divergence on purpose">
-              Staging a version ahead, a canary stamp on a newer artifact, a
-              region on an older blueprint — environments differing <em>is</em>{" "}
-              progressive delivery, not a failure to converge.
+              Staging a version ahead, a canary slot on a newer build, a region
+              on an older blueprint — differences between environments are
+              deliberate, and you can see every one of them.
             </Term>
             <Term name="One question, one answer">
-              “Which version is in effect here” means the same thing whether the
-              block is a blueprint, a configuration, an API contract, a policy or
-              a workload declaration.
+              “Which version is in effect here?” is asked and answered the same
+              way for a blueprint, a configuration, an API contract or a policy.
             </Term>
           </dl>
         </Section>
@@ -341,7 +323,8 @@ export default function Home() {
           </div>
 
           <p className="mt-8 max-w-3xl text-pretty leading-relaxed text-muted-foreground">
-            Every building block records both what should be running and what is.
+            For everything it delivers, Lembos records both what should be
+            running and what is.
             The difference between the two is drift, and closing it is the work.
             Automated deployment is one way to close it. Reconciliation, rollback
             and progressive rollout are others.
@@ -361,58 +344,64 @@ export default function Home() {
         {/* ---------------------------------------------------------------- */}
         {/* The model                                                         */}
         {/* ---------------------------------------------------------------- */}
-        <Section id="model" className="bg-background-gray">
+        <Section id="portal" className="bg-background-gray">
           <SectionHeading
-            eyebrow="The model"
-            title="Five modules, each an invariant boundary"
-            lead="Aggregates inside a module enforce rules over each other. Anything across a boundary is referenced rather than navigated to. Read them in order: what software exists, what it is delivered with, how it gets there, whether it may, and who is involved."
+            eyebrow="In the Portal"
+            title="Three areas, one for each kind of work"
+            lead="Everything in Lembos is owned by a team and visible to the people who need it. Product teams describe and ship their software, platform teams publish the paths they ship on, and administrators decide who is involved."
           />
 
-          <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {modules.map((module) => (
-              <Card key={module.name} className="flex flex-col">
-                <h3 className="text-lg font-semibold">{module.name}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {module.answers}
+          <div className="mt-12 grid gap-4 md:grid-cols-2">
+            {areas.map((area) => (
+              <Card key={area.name} className="flex flex-col">
+                <h3 className="text-lg font-semibold">{area.name}</h3>
+                <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+                  {area.who}
+                </p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {area.answers}
                 </p>
                 <div className="mt-4 flex flex-wrap gap-1.5 pt-1">
-                  {module.holds.map((aggregate) => (
+                  {area.holds.map((thing) => (
                     <span
-                      key={aggregate}
-                      className="rounded border px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+                      key={thing}
+                      className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground"
                     >
-                      {aggregate}
+                      {thing}
                     </span>
                   ))}
                 </div>
               </Card>
             ))}
-
             <Card className="flex flex-col justify-between border-dashed">
               <div>
-                <h3 className="text-lg font-semibold">The whole model</h3>
+                <h3 className="text-lg font-semibold">A tour of each area</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Aggregates, lifecycles, behaviours and the events they raise —
-                  documented per module and kept current with the code.
+                  What every page is for and who uses it, with screenshots — from
+                  describing your software to shipping it.
                 </p>
               </div>
-              <p className="mt-4 text-sm font-medium text-muted-foreground">
-                Published with the platform source
-              </p>
+              <Link
+                href="/docs/use"
+                className="mt-4 inline-flex items-center text-sm font-medium text-primary hover:underline"
+              >
+                Using Lembos
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+              </Link>
             </Card>
           </div>
 
           <div className="mt-14 grid gap-10 lg:grid-cols-[1fr_1.15fr] lg:items-center">
             <div>
               <h3 className="text-2xl font-semibold tracking-tight">
-                Typed by contract, not by label
+                Every component knows what it is
               </h3>
               <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
-                A component or resource declares the blueprint that defines it,
-                so “what is this thing” resolves to a shape the platform can act
-                on rather than a string someone typed. What each entity provides,
-                consumes and depends on is held as references, so the graph can
-                be traversed without loading half the catalog.
+                A component names the blueprint it is built from, so Lembos knows
+                how to build, configure and deploy it — not just what it is
+                called. What it provides, consumes and depends on is drawn as a
+                graph, so you can see what a change might touch before you make
+                it.
               </p>
             </div>
             <PortalShot
@@ -431,7 +420,7 @@ export default function Home() {
           <SectionHeading
             eyebrow="Capabilities"
             title="What the platform carries"
-            lead="Each of these is a feature of the model rather than an integration sitting beside it."
+            lead="Built in from the start, rather than integrations sitting beside it."
           />
 
           <div className="mt-12 grid gap-px overflow-hidden rounded-xl border bg-border md:grid-cols-2 lg:grid-cols-3">
@@ -454,7 +443,7 @@ export default function Home() {
           <SectionHeading
             eyebrow="Guardrails"
             title="Access control is three layers, not one"
-            lead="Each answers a different question, and collapsing them into one mechanism fails whichever mechanism is chosen. RBAC alone cannot express “production is restricted to a few people while anyone may create a dev environment”."
+            lead="Each answers a different question, and folding them into one mechanism fails whichever one is chosen. Roles alone cannot express “production is restricted to a few people while anyone may create a dev environment”."
           />
 
           <div className="mt-12 grid gap-10 lg:grid-cols-2 lg:gap-12">
@@ -462,12 +451,12 @@ export default function Home() {
 
             <div>
               <h3 className="text-xl font-semibold tracking-tight">
-                And work only routes where it can run
+                And work only goes where it can run
               </h3>
               <p className="mt-3 text-pretty leading-relaxed text-muted-foreground">
-                Execution targets declare capabilities, and intent is matched
-                against them before anything is dispatched. Adding a runtime
-                surface means adding a target, not changing orchestration logic.
+                Clusters and cloud accounts say what they can do, and each piece
+                of work goes only where it can run. Adding a new kind of runtime
+                means registering it, not rewriting how deployment works.
               </p>
               <div className="mt-6">
                 <RoutingFigure />
@@ -537,11 +526,11 @@ export default function Home() {
           <SectionHeading
             eyebrow="What you operate"
             title="A platform you run yourself"
-            lead="There is no hosted Lembos. It is one .NET solution composed by Aspire — an orchestrator behind a single GraphQL endpoint, an identity server, a worker running durable workflows, and the Portal — provisioning into execution targets you own."
+            lead="There is no hosted Lembos. It runs in a Kubernetes cluster you operate, and builds into the cloud accounts and clusters you already own."
           />
 
           <div className="mt-12 grid gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-2 lg:grid-cols-5">
-            {stack.map((item) => (
+            {operates.map((item) => (
               <div key={item.name} className="bg-card px-5 py-4">
                 <p className="font-medium">{item.name}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{item.role}</p>
@@ -550,9 +539,8 @@ export default function Home() {
           </div>
 
           <p className="mt-8 max-w-3xl text-pretty leading-relaxed text-muted-foreground">
-            It installs with a Helm chart — the four services, a setup job that
-            makes every secret and key, and PostgreSQL, Redis and Temporal run
-            simply, highly available or as services you already have. The{" "}
+            One Helm chart installs it, makes every secret and key it needs, and
+            runs simply or highly available. The{" "}
             <Link href="/docs/install" className="text-primary hover:underline">
               install guide
             </Link>{" "}
@@ -574,26 +562,23 @@ export default function Home() {
           />
           <div className="container relative py-20 text-center md:py-28">
             <h2 className="text-balance text-3xl font-semibold tracking-tight md:text-4xl">
-              The reasoning will be in the open too
+              See it for yourself
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-pretty leading-relaxed text-muted-foreground">
-              Decision records state why the architecture is the way it is, one
-              document per decision. Enhancement proposals hold the changes not
-              yet decided. Both are published with the platform source; until
-              then, the chart that installs it is public.
+              The quickstart puts a complete Lembos on a local Kubernetes in about
+              fifteen minutes — with a sample organisation to explore, if you
+              want one.
             </p>
 
             <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
               <Button size="lg" asChild>
-                <Link href={site.deploy} target="_blank" rel="noopener noreferrer">
-                  <GitHubIcon className="mr-2 h-4 w-4" />
-                  lembosproj/deploy
+                <Link href="/docs/quickstart">
+                  Start the quickstart
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href={site.org} target="_blank" rel="noopener noreferrer">
-                  Follow on GitHub
-                </Link>
+                <Link href="/docs">Read the docs</Link>
               </Button>
             </div>
 

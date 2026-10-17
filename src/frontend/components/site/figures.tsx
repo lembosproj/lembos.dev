@@ -89,18 +89,18 @@ export function AuthorizationLayers() {
   const layers = [
     {
       name: "Permission",
-      question: "May this principal do this class of thing?",
-      how: "Flat RBAC, carried as claims. Cheap, and invertible — “who may deploy” is a role query.",
+      question: "May this person or machine do this kind of thing?",
+      how: "Roles grant permissions, so “who may deploy?” is answered by a list rather than an investigation.",
     },
     {
       name: "Ownership",
-      question: "Do they reach this particular entity?",
+      question: "Do they reach this particular thing?",
       how: "Group membership, inherited down the hierarchy, so a member of a parent group reaches what its children own.",
     },
     {
       name: "Policy",
-      question: "Is this specific intent allowed right now?",
-      how: "Conditions on facts, evaluated at the moment of the request against a pinned policy version.",
+      question: "Is this particular change allowed right now?",
+      how: "Policies check the facts of the change at the moment it is asked for, and record which version decided.",
     },
   ]
 

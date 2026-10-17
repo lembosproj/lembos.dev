@@ -1,6 +1,41 @@
 version: 2
 updates:
+  # The site. One pnpm workspace with its lockfile at the root, so the root is the directory Dependabot reads.
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
+    groups:
+      # Minor and patch releases together: one pull request a week rather than one per package. A major
+      # still comes alone, because it is the kind that needs reading — Next 15 → 16 needed Tailwind 4.
+      site:
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # The types describe the Node the site runs on — 22, pinned in pnpm-workspace.yaml and the deploy
+      # workflow. A newer major would offer APIs that Node 22 does not have; move it with the runtime.
+      - dependency-name: "@types/node"
+        update-types:
+          - version-update:semver-major
+
+  # The AppHost that runs the site locally. Its Aspire.AppHost.Sdk version is in the project's Sdk attribute,
+  # which Dependabot does not move: keep it equal to Aspire.Hosting.JavaScript when this one lands.
+  - package-ecosystem: nuget
+    directory: /src/apphost/Lembos.Dev.AppHost
+    schedule:
+      interval: weekly
+    groups:
+      Aspire:
+        patterns:
+          - "Aspire.*"
+
+  # The actions the Pages and Markdownlint workflows run.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
