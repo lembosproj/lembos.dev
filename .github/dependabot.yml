@@ -18,6 +18,10 @@ updates:
       - dependency-name: "@types/node"
         update-types:
           - version-update:semver-major
+      # TypeScript 7 is the rewritten native compiler; move to it once Next supports it, not when it ships.
+      - dependency-name: typescript
+        update-types:
+          - version-update:semver-major
 
   # The AppHost that runs the site locally. Its Aspire.AppHost.Sdk version is in the project's Sdk attribute,
   # which Dependabot does not move: keep it equal to Aspire.Hosting.JavaScript when this one lands.
@@ -29,6 +33,12 @@ updates:
       Aspire:
         patterns:
           - "Aspire.*"
+    ignore:
+      # Pinned only to lift Aspire's vulnerable 2.5.302 to the patched 2.x line. Aspire is built against
+      # 2.x, so a 3.x major would break it; drop the pin once Aspire depends on a fixed version itself.
+      - dependency-name: MessagePack
+        update-types:
+          - version-update:semver-major
 
   # The actions the Pages and Markdownlint workflows run.
   - package-ecosystem: github-actions
