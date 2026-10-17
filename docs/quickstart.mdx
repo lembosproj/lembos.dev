@@ -1,0 +1,112 @@
+---
+title: Quickstart
+description: Run Lembos on your laptop, on a local k3s cluster.
+---
+
+This puts a complete Lembos on a local Kubernetes cluster: one pod per service, PostgreSQL, Redis and
+Temporal beside them, a mail catcher for invitations, and TLS from a certificate authority the install
+generates. It is the fastest way to see the Portal with your own eyes.
+
+## What you need
+
+- Helm 3 and `kubectl`
+- Git, to fetch the chart
+- A k3s cluster with about **4 CPUs and 8 GiB of memory** to spare:
+  - **macOS** — [colima](https://github.com/abiosoft/colima) with Kubernetes:
+
+    ```bash
+    colima start --kubernetes --cpu 4 --memory 8
+    kubectl config use-context colima
+    ```
+
+  - **Linux** — [k3s](https://docs.k3s.io/quick-start) itself.
+
+## 1. Install
+
+```bash
+git clone https://github.com/lembosproj/deploy && cd deploy
+
+helm repo add dandydeveloper https://dandydeveloper.github.io/charts
+helm repo add temporal https://go.temporal.io/helm-charts
+helm dependency build charts/lembos
+
+helm upgrade --install lembos charts/lembos -n lembos --create-namespace \
+  -f charts/lembos/values-k3s.yaml
+```
+
+## 2. Let the cluster find itself
+
+Once per cluster, restart CoreDNS so `*.lembos.localhost` resolves to the ingress inside the cluster as well
+as outside it:
+
+```bash
+kubectl -n kube-system rollout restart deployment/coredns
+```
+
+## 3. Wait for it to come up
+
+```bash
+kubectl -n lembos get pods -w
+```
+
+The first install takes a few minutes, most of it pulling images. Some services restart once or twice
+while they wait for the database and Temporal to accept connections — that is expected.
+
+## 4. Trust the certificate
+
+Every address is served with a certificate from a CA the install generated. Trust it once:
+
+```bash
+kubectl -n lembos get secret lembos-ingress-ca -o jsonpath='{.data.ca\.crt}' | base64 -d > lembos-ca.crt
+```
+
+<Tabs items={["macOS", "Debian or Ubuntu"]}>
+  <Tab value="macOS">
+    ```bash
+    sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain lembos-ca.crt
+    ```
+  </Tab>
+  <Tab value="Debian or Ubuntu">
+    ```bash
+    sudo cp lembos-ca.crt /usr/local/share/ca-certificates/ && sudo update-ca-certificates
+    ```
+  </Tab>
+</Tabs>
+
+Firefox keeps its own store: import the file under **Settings → Certificates**.
+
+## 5. Sign in
+
+Open [https://portal.lembos.localhost](https://portal.lembos.localhost) and sign in as `admin@lembos.local`.
+The password was generated for you:
+
+```bash
+kubectl -n lembos get secret lembos-secrets -o jsonpath='{.data.identity-admin-password}' | base64 -d; echo
+```
+
+| What          | Where                                |
+|---------------|--------------------------------------|
+| Portal        | `https://portal.lembos.localhost`    |
+| Sign-in       | `https://identity.lembos.localhost`  |
+| Mail          | `https://mail.lembos.localhost`      |
+| Workflows     | `https://temporal.lembos.localhost`  |
+
+Invitations, confirmations and password resets land in the mail catcher; nothing leaves the cluster.
+
+<Callout title="Want something to look at?">
+  The catalog starts empty. To explore with a sample organisation — an invented retailer with systems,
+  components, APIs and a two-region production environment — add `--set orchestrator.sampleData=true` to
+  the install command.
+</Callout>
+
+## Clean up
+
+```bash
+helm uninstall lembos -n lembos     # keeps the generated secrets and the data
+kubectl delete namespace lembos     # removes everything, the CA included
+```
+
+## Next
+
+- [Concepts](/docs/concepts) — what you are looking at.
+- [Install](/docs/install) — the same thing in a cluster other people use.

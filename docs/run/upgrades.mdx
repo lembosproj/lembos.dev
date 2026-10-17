@@ -1,0 +1,42 @@
+---
+title: Upgrades
+description: Moving to a new chart or a new platform release.
+---
+
+The chart and the platform are versioned separately:
+
+- **The chart's version** changes when the way Lembos is installed changes.
+- **The platform version** (the chart's `appVersion`) is the Lembos release it installs.
+
+A chart release can fix the installation without a new platform, and adopting a new platform release is a
+new chart version that names it.
+
+## Upgrading
+
+```bash
+helm upgrade lembos oci://ghcr.io/lembosproj/charts/lembos --version <chart version> \
+  -n lembos -f values.yaml
+```
+
+The setup job runs again first and **keeps every secret it already made**. Each service applies its own
+database changes when it starts.
+
+## Running a different platform release
+
+To run a platform release other than the one the chart names — to try a release candidate, say — set the
+image tag:
+
+```bash
+helm upgrade lembos oci://ghcr.io/lembosproj/charts/lembos --version <chart version> \
+  -n lembos -f values.yaml --set global.image.tag=<platform version>
+```
+
+<Callout title="Before 1.0">
+  Lembos is pre-release. Until 1.0, read the release notes before upgrading: a release may change the
+  database in a way that needs a fresh install.
+</Callout>
+
+## Using a mirror
+
+Point `global.image.registry` at your mirror and add `global.imagePullSecrets`; the image paths stay the
+same.

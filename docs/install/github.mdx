@@ -1,0 +1,55 @@
+---
+title: Sign in with GitHub
+description: Let your GitHub organisation's members sign in to Lembos.
+---
+
+Lembos does not let people register themselves. Accounts come from an invitation, or — with this
+integration — from membership of your GitHub organisation.
+
+## 1. Create a GitHub App
+
+Create a GitHub App owned by your organisation and install it there. It provides two pairs of credentials
+with two different jobs:
+
+| Credentials                   | Used for                                 |
+|-------------------------------|------------------------------------------|
+| **App ID** and **private key** | Reading your organisation's members     |
+| **Client ID** and **client secret** | Signing people in                  |
+
+They belong to the same App and are easy to mix up: using the client credentials to read members fails
+with a 401 that names neither.
+
+Set the App's callback URL to `https://identity.<your domain>/connect/callback/login/github`.
+
+## 2. Give Lembos the credentials
+
+Put the five values in a Secret you manage and name it in `secrets.gitHub.existingSecret`, or set them
+inline:
+
+```yaml
+platform:
+  integrations:
+    gitHub:
+      enabled: true
+
+secrets:
+  gitHub:
+    existingSecret: lembos-github   # keys: github-app-id, github-app-org,
+                                    # github-private-key-base64, github-client-id, github-client-secret
+```
+
+`github-app-org` may list several organisations, separated by commas.
+
+<Callout type="warn">
+  Membership of **any** listed organisation grants a Lembos account. List only organisations whose
+  membership means "works here" — a public one that accepts outside contributors would hand accounts to
+  strangers.
+</Callout>
+
+## 3. Upgrade
+
+```bash
+helm upgrade lembos oci://ghcr.io/lembosproj/charts/lembos --version 0.1.0 -n lembos -f values.yaml
+```
+
+The sign-in page now offers GitHub.

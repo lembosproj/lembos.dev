@@ -1,0 +1,62 @@
+---
+title: Publish golden paths
+description: Blueprints, and the execution targets and credentials they run with.
+---
+
+A golden path in Lembos is a **blueprint**: a versioned recipe for building a component, a resource or an
+environment. Platform teams write them once; product teams use them without having to learn what is
+underneath. Find them under **Platform**.
+
+## Where things run: execution targets
+
+An **execution target** is somewhere Lembos is allowed to build into — a cloud account, an on-premises
+site, a Kubernetes cluster. Registering one is a deliberate act by the platform team; a blueprint can never
+create one.
+
+<Screenshot name="execution-targets" ratio={2.3} alt="The execution targets: Kubernetes clusters and AWS accounts, each with its provider, whether it is reachable, its type and its capabilities." />
+
+Lembos checks the connection the moment a target is registered or changed, and on request, so a wrong role
+or an expired credential shows up on the target rather than on the next deployment. A target's page shows
+where it is, how the platform gets in, and when that was last checked.
+
+<Screenshot name="execution-target" ratio={2.1} alt="An AWS account registered as an execution target, showing its account and state backend, its static-key credential verified as reachable, and a Check now action." />
+
+## Private sources: source credentials
+
+Blueprints usually live in private Git repositories or registries. A **source credential** — a token, a
+GitHub App or an SSH key — opens every source under the URL prefixes you give it. The most specific prefix
+wins, so one repository can have a credential of its own. A GitHub App's key never leaves the platform:
+each fetch gets a short-lived, read-only token for one repository.
+
+## Blueprints
+
+<Screenshot name="blueprints" ratio={3} alt="The blueprints: environment, component and resource recipes, each with its provisioner, latest version and status." />
+
+Each blueprint version pins:
+
+- **What it builds** — a component, a resource, or an environment.
+- **The tool** — Terraform or Helm — and the exact version of it, chosen from that tool's published
+  releases.
+- **The source** — a Git repository or OCI registry, optionally pinned to a digest.
+- **Its inputs and outputs** — what it asks for, who may answer each input (the product team or the
+  environment), and what it promises back.
+
+<Screenshot name="blueprint-versions" ratio={2.6} alt="A blueprint's versions: 2.6.0 published and current, 2.5.0-rc.1 a draft, 2.4.0 and 2.2.0 deprecated, and 2.3.0 withdrawn because its artifact cannot be found." />
+
+### The version lifecycle
+
+A version starts as a **draft**, where you can edit it and import its inputs and outputs from the module
+itself. It can be **published** only once Lembos has fetched its source from the fleet that will run it —
+a version that cannot be retrieved is never handed out.
+
+A published version never changes. To change a golden path, publish a new version. Nothing pinned to the old
+one moves until its owner moves it, and the Portal shows where each version is still in use. Older versions
+can be **deprecated** (still usable, discouraged) or **withdrawn** (no longer offered).
+
+## Artifacts
+
+An **artifact** is a specific built thing — an image, a chart — identified by its content digest, with a
+record of where it was built from. An artifact can be quarantined, which stops it from being deployed
+anywhere.
+
+<Screenshot name="artifacts" ratio={3} alt="The artifacts: container images, each with the component it belongs to, its digest, its supply-chain state — signature and SBOM — and its status." />

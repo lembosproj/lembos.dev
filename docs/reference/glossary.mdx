@@ -1,0 +1,35 @@
+---
+title: Glossary
+description: The words Lembos uses, and what each one means.
+---
+
+| Term | Meaning |
+|------|---------|
+| **API** | An interface components provide or consume. Its specification is versioned. |
+| **Artifact** | A specific built thing — an image, a chart — identified by its content digest, with a record of where it was built from. |
+| **Audit log** | Who did what, when, and what changed. Every change is recorded. |
+| **Blueprint** | A versioned recipe for building a component, a resource or an environment. The golden path. |
+| **Business domain** | An area of the business. Business areas contain capabilities. |
+| **Component** | A deployable piece of software, defined by a blueprint, belonging to a software system. |
+| **Desired state** | What an instance should be running. |
+| **Draft** | A version being prepared. Every versioned thing starts as one. |
+| **Drift** | A difference between desired and observed state. |
+| **Environment** | A place to deliver into: dev, staging, a preview, production. |
+| **Execution target** | A cloud account, site or cluster Lembos is allowed to build into. |
+| **Group** | A team, department or project. Groups nest, and own everything in Lembos. |
+| **Instance** | One building block in one slot of one environment: what it should run and what it does run. |
+| **Observed state** | What an instance was last seen running, and its health. |
+| **Owner** | The group accountable for an entity. |
+| **Placement rule** | Which workloads may be placed into which environments and slots. |
+| **Policy** | A versioned guardrail, checked before work is dispatched. Audits, warns or enforces. |
+| **Promotion** | Moving a release into an environment, optionally into specific slots. |
+| **Release** | A fixed set of artifacts promoted together, with the record of where it has been. |
+| **Resource** | Something components depend on that is provisioned rather than deployed — a database, a cache, a queue. |
+| **Role** | A named set of permissions. |
+| **Run** | One attempt to make one thing in one slot match what was declared, and its record. |
+| **Secret reference** | A pointer to a secret in your vault. The secret itself never passes through Lembos. |
+| **Service account** | A machine that acts in Lembos: a pipeline, an integration, an agent. |
+| **Slot** | One subdivision of an environment — a region, a country — described by dimensions. |
+| **Software system** | The components, APIs and resources that together deliver a capability. |
+| **Source credential** | How Lembos signs in to private Git repositories and registries. |
+| **Spec** | A component's or resource's versioned configuration and placement. |

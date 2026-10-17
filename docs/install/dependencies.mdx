@@ -1,0 +1,55 @@
+---
+title: Dependencies
+description: Running PostgreSQL, Redis and Temporal simply, with failover, or outside the cluster.
+---
+
+Each dependency has a `mode` of `simple`, `high-available` or `external`. Left empty, it follows
+`installMode`.
+
+| Dependency     | `simple`           | `high-available`                                  | `external`              |
+|----------------|--------------------|---------------------------------------------------|-------------------------|
+| **PostgreSQL** | One pod            | A CloudNativePG cluster with automatic failover   | `postgresql.external`   |
+| **Redis**      | One pod            | Sentinel, with HAProxy routing to the primary     | `redis.external`        |
+| **Temporal**   | One pod            | Temporal's official chart, one deployment per role | `temporal.external`    |
+
+## PostgreSQL
+
+Each Lembos service has its own database. The simple server creates them on first start.
+
+**High-available** PostgreSQL is a CloudNativePG cluster. The operator is the one thing the chart cannot
+bring with it — operators are installed once per cluster, by whoever runs it:
+
+```bash
+helm repo add cnpg https://cloudnative-pg.github.io/charts
+helm upgrade --install cnpg cnpg/cloudnative-pg --namespace cnpg-system --create-namespace
+```
+
+Without the operator, a high-available install can still use an **external** managed database. Give
+Lembos a user that may create databases, or create them ahead of time.
+
+## Redis
+
+Redis holds the Portal's sign-in keys beside the sessions they protect: losing it signs everyone out. The
+simple Redis persists to disk for that reason.
+
+## Temporal
+
+Temporal runs every provisioning and deployment workflow durably, so a run interrupted by a restart picks
+up where it left off. The simple mode runs all of Temporal in one process; high-available uses Temporal's
+own chart.
+
+<Callout type="warn">
+  Lembos talks to Temporal over plain gRPC in the `default` namespace. TLS, API keys and Temporal Cloud are
+  not supported yet.
+</Callout>
+
+The Temporal UI has no sign-in of its own, so it is internal by default. Reach it with a port-forward:
+
+```bash
+kubectl -n lembos port-forward svc/lembos-temporal-ui 8080:8080
+```
+
+## Installing under another name
+
+The upstream Redis and Temporal charts cannot read Lembos's values, so a few of their settings are written
+for a release called `lembos`. Under another release name, the chart stops and names each value to change.

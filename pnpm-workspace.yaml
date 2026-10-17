@@ -1,0 +1,7 @@
+packages:
+  - src/frontend
+
+# Fumadocs' build loaders are ES modules that Next loads with require(), which
+# Node supports from 22.12. pnpm runs every script under this version, whatever
+# node is first on PATH — including when Aspire starts the site.
+useNodeVersion: 22.12.0

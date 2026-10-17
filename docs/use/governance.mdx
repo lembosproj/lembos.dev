@@ -1,0 +1,52 @@
+---
+title: Governance and audit
+description: Policies that are checked before work happens, and a record of everything that did.
+---
+
+## Policies
+
+A **policy** is a guardrail. It has a **scope** — what it governs — and versioned **rules** — what it
+requires. Each rule is a condition on a known fact about the change being made: the environment's stage,
+the blueprint, the owner, and so on.
+
+### When a policy is checked
+
+| Phase            | Checked when                                   |
+|------------------|------------------------------------------------|
+| Plan time        | A change is planned                            |
+| Pre-deploy       | Just before work is dispatched                 |
+| Promotion time   | A release is promoted into an environment      |
+| Decommission time | Something is being torn down                  |
+
+### What a policy does when it fails
+
+| Enforcement | Effect                                      |
+|-------------|---------------------------------------------|
+| **Audit**   | Record the result only                      |
+| **Warn**    | Require someone's approval before going on  |
+| **Enforce** | Block                                       |
+
+A good way to introduce a guardrail is to publish it as **audit**, see what it would have caught, then move
+it to **warn** and finally **enforce**.
+
+<Screenshot name="policies" ratio={2.2} alt="The policies, each with its category, what it governs, the version in force, when it is evaluated, and its status." />
+
+A policy's page shows its scope, what it checks and its versions — and says plainly when it is checking nothing:
+
+<Screenshot name="policy" ratio={2.6} alt="A suspended production release guard: its owner, category and scope, and a notice that nothing is checked until it is resumed." />
+
+Policies are checked *before* work is dispatched, not audited after it lands. Every decision records the
+exact policy version that made it, so a later edit cannot change what was enforced at the time.
+
+<Callout>
+  A rule whose fact was never supplied is reported as *indeterminate*, not as passing. A guardrail that
+  looks configured but quietly enforces nothing is worse than none.
+</Callout>
+
+## The audit log
+
+Every change made in Lembos — by a person or by a machine — is written to the **audit log** under
+**Platform → Audit log**: who did what, when, and what changed. It is a property of the platform, not a
+feature that can be turned off.
+
+<Screenshot name="audit-log" alt="The audit log: each change with when it happened, the event, the entity it touched and who made it." />

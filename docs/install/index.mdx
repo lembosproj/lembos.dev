@@ -1,0 +1,53 @@
+---
+title: Before you install
+description: What Lembos needs from your cluster, and the shape of an installation.
+---
+
+Lembos installs into Kubernetes with a Helm chart published from the
+[deploy repository](https://github.com/lembosproj/deploy). The chart brings the four Lembos services and,
+unless you supply your own, the three things they depend on.
+
+## What gets installed
+
+| Part             | What it does                                                         | Address                   |
+|------------------|----------------------------------------------------------------------|---------------------------|
+| **Portal**       | The web application people use                                       | `portal.<your domain>`    |
+| **Identity**     | Accounts, sign-in, and the tokens every other service trusts          | `identity.<your domain>`  |
+| **Orchestrator** | The platform itself: the model, its rules and its API                 | `orchestrator.<your domain>` |
+| **Worker**       | Runs the provisioning and deployment work: Terraform and Helm         | not published             |
+| **Setup job**    | Creates every secret and key before anything else starts              | —                         |
+| PostgreSQL       | Each service's database                                               | —                         |
+| Redis            | Sessions and caches                                                   | —                         |
+| Temporal         | Durable workflows: every run is retried and recorded                  | `temporal.<your domain>`, internal by default |
+
+## Requirements
+
+| When                                     | You need                                                |
+|------------------------------------------|---------------------------------------------------------|
+| Always                                   | Kubernetes 1.27 or later, and an ingress controller or a Gateway |
+| Always, outside a laptop                 | An SMTP relay, for invitations and password resets      |
+| High-available PostgreSQL in the cluster | The CloudNativePG operator, 1.25 or later               |
+| Publishing through a Gateway             | The Gateway API CRDs                                    |
+| Autoscaling                              | A metrics server                                        |
+| Scaling the Worker on queue length       | KEDA 2.17 or later                                      |
+
+The chart checks for the operators and CRDs it needs before it renders anything, and names what is
+missing rather than leaving the cluster to reject an unknown resource.
+
+## Simple or high-available
+
+One setting, `installMode`, decides the shape of the whole installation:
+
+| `installMode`    | Lembos services                                                         | PostgreSQL, Redis, Temporal |
+|------------------|-------------------------------------------------------------------------|-----------------------------|
+| `simple`         | One pod each                                                            | One pod each                |
+| `high-available` | Two each, spread across nodes; the Orchestrator and Worker autoscale    | With failover               |
+
+Each dependency can also be **external** — a managed database, a Redis you already run. A simple install
+can use an external PostgreSQL; a high-available install refuses a simple dependency, because two of
+everything in front of one database pod is still one pod from an outage. See
+[Dependencies](/docs/install/dependencies).
+
+## Next
+
+[Install with Helm](/docs/install/helm).

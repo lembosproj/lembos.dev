@@ -1,0 +1,36 @@
+---
+title: Using Lembos
+description: A tour of the Portal, and who does what in it.
+---
+
+The Portal is organised into three areas, one for each kind of work:
+
+| Area             | For                                   | Holds                                                                         |
+|------------------|---------------------------------------|-------------------------------------------------------------------------------|
+| **Workspace**    | Product teams                          | Business domains, software systems, components, APIs and resources           |
+| **Platform**     | Platform, security and operations teams | Blueprints, environments, execution targets, source credentials, placement rules, policies, instances, artifacts and the audit log |
+| **Organization** | Administrators                         | Users, groups, roles and service accounts                                     |
+
+What you can see and change in each depends on your [roles and group memberships](/docs/use/access).
+
+The home page gathers what is waiting on a decision, what needs attention, and what your groups own:
+
+<Screenshot name="overview" ratio={2.1} alt="The Portal home page: counts of what is waiting on a decision, failed, drifted, past its lease or quarantined, then the environments, systems, components and blueprints owned by your groups." />
+
+## A typical first week
+
+1. **An administrator sets up the organisation** — groups for your teams, and people in them.
+   [Access](/docs/use/access)
+2. **The platform team registers where things run** — a cloud account or cluster as an execution target,
+   and credentials for private sources. [Golden paths](/docs/use/golden-paths)
+3. **The platform team publishes golden paths** — blueprints for a web service, a database, an
+   environment. [Golden paths](/docs/use/golden-paths)
+4. **The platform team declares environments** — dev, staging and production, with slots where production
+   is split by region or country, and rules for what may be placed where.
+   [Environments](/docs/use/environments)
+5. **Product teams describe their software** — systems, components, APIs and the resources they need,
+   each on a blueprint. [Catalog](/docs/use/catalog)
+6. **Product teams ship** — configure each component, trigger a release and promote it from environment to
+   environment. [Delivery](/docs/use/delivery)
+7. **Guardrails go in as you learn** — policies that warn first, then enforce.
+   [Governance](/docs/use/governance)

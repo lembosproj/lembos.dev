@@ -1,0 +1,42 @@
+---
+title: Scaling
+description: How many runs each Worker takes, and how many Workers there are.
+---
+
+Most of Lembos is light. The **Worker** is not: every provisioning or deployment run is a Terraform or Helm
+process, and its cost lands on the pod that runs it.
+
+## How many runs a Worker takes
+
+A Worker takes a new run only while it has room for it — CPU and memory under their targets, and enough
+free disk on its workspace — and never more than `worker.maxConcurrentRuns`. A run it holds back simply
+waits in the queue, where it costs nothing.
+
+| Setting                                        | Default | Meaning                                                        |
+|------------------------------------------------|---------|----------------------------------------------------------------|
+| `worker.maxConcurrentRuns`                     | 4       | The ceiling, whatever the measurements say                     |
+| `worker.capacity.targetCpuUsage`               | 0.8     | Take runs while CPU is under this share of the pod's limit     |
+| `worker.capacity.targetMemoryUsage`            | 0.8     | Take runs while memory is under this share of the pod's limit  |
+| `worker.capacity.minimumFreeDiskMegabytes`     | 1024    | Never go below this on the workspace                           |
+| `worker.capacity.reservedDiskPerRunMegabytes`  | 512     | What each run in flight may still write                        |
+| `worker.cacheRetention`                        | 30 days | Forget cached tools and providers unused for this long         |
+
+Each Worker downloads the Terraform and Helm versions blueprints ask for, once, into its own workspace
+volume.
+
+## How many Workers there are
+
+`worker.autoscaling` is on in a high-available install. Choose the scaler:
+
+- **`hpa`** — a standard autoscaler on CPU and memory. Simple, but blind to runs waiting in the queue.
+- **`keda`** — scales on the number of runs waiting, as well as CPU and memory, so the fleet grows from
+  exactly what is held back. Needs KEDA 2.17 or later.
+
+Either way, scale-down waits ten minutes: a Worker removed mid-run hands its run to another, which starts it
+again.
+
+## Everything else
+
+In a high-available install, every Lembos service runs at least two replicas spread across nodes, with
+disruption budgets; the Orchestrator autoscales too. A service's own `replicas` and `autoscaling` settings
+override `installMode`.

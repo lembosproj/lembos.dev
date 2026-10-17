@@ -1,0 +1,278 @@
+@import "tailwindcss";
+/* The enter and exit animations the Radix sheet and dropdown use. */
+@import "tw-animate-css";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+/* next-themes puts the class on <html>, so the root itself must match too. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --breakpoint-xs: 420px;
+
+  /* Public Sans for everything, Roboto for the wordmark — the pairing the
+     Portal already uses. */
+  --font-sans: var(--font-public-sans), system-ui, sans-serif;
+  --font-brand: var(--font-roboto), Roboto, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-background-gray: hsl(var(--background-gray));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-success: hsl(var(--success));
+  --color-warning: hsl(var(--warning));
+  --color-info: hsl(var(--info));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-fade-up: fade-up 0.5s ease-out both;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Full width with a gutter, capped at 1200px. This extends Tailwind's own
+   container, which caps at every breakpoint; `max-width: none` is emitted after
+   those caps and so lifts them. */
+@utility container {
+  width: 100%;
+  max-width: none;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  @media (width >= 1200px) {
+    max-width: 1200px;
+  }
+}
+
+/* The wordmark, matching .page-brand-text in the Portal's own stylesheet. */
+@utility brand-text {
+  font-family: var(--font-roboto), "Roboto", Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.2rem;
+  user-select: none;
+}
+
+/* A faint engineering grid. Fades out downward so sections below start clean. */
+@utility grid-backdrop {
+  background-image:
+    linear-gradient(
+      to right,
+      hsl(var(--grid-line) / var(--grid-alpha)) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      hsl(var(--grid-line) / var(--grid-alpha)) 1px,
+      transparent 1px
+    );
+  background-size: 64px 64px;
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+  mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+}
+
+/* The indigo bloom behind the hero screenshot. */
+@utility brand-glow {
+  background: radial-gradient(
+    60% 55% at 50% 0%,
+    hsl(var(--primary) / var(--glow-alpha)) 0%,
+    transparent 70%
+  );
+}
+
+@utility hairline {
+  border-color: var(--color-border);
+}
+
+/*
+  The palette is the Portal's, value for value.
+
+  It is copied from src/Lembos.Components/Services/LembosTheme.cs in the platform
+  repository rather than reinvented here, for the same reason that file gives for
+  sharing one theme between the Portal and the sign-in screen: a marketing site
+  styled differently from the product it describes reads as a different product.
+  Hex there, HSL triplets here, because every shadcn component below expects
+  `hsl(var(--token))`.
+*/
+@layer base {
+  :root {
+    --background: 0 0% 98%;          /* #FAFAFA  Background      */
+    --background-gray: 0 0% 96%;     /* #F5F5F5  BackgroundGray  */
+    --foreground: 0 0% 0%;           /* #000000  TextPrimary     */
+
+    --card: 0 0% 100%;               /* #FFFFFF  Surface         */
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    --primary: 248 75% 59%;          /* #5B46E5  Primary         */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 32%;    /* #525252  TextSecondary   */
+
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 358 75% 59%;      /* #E5484D  Error           */
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 131 41% 46%;          /* #45A557  Success         */
+    --warning: 32 95% 44%;           /* #D97706  Warning         */
+    --info: 212 100% 48%;            /* #0070F3  Info            */
+
+    --border: 0 0% 90%;              /* #E5E5E5  Divider         */
+    --input: 0 0% 90%;
+    --ring: 248 75% 59%;
+
+    --radius: 0.5rem;
+
+    /* Hero furniture, tuned per theme rather than opacity-faked from one value. */
+    --grid-line: 0 0% 0%;
+    --grid-alpha: 0.045;
+    --glow-alpha: 0.10;
+  }
+
+  .dark {
+    --background: 0 0% 4%;           /* #0A0A0A  Background      */
+    --background-gray: 0 0% 6%;      /* #101010  BackgroundGray  */
+    --foreground: 0 0% 93%;          /* #EDEDED  TextPrimary     */
+
+    --card: 0 0% 8%;                 /* #141414  Surface         */
+    --card-foreground: 0 0% 93%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 93%;
+
+    --primary: 247 100% 74%;         /* #8B7CFF  Primary         */
+    --primary-foreground: 0 0% 4%;
+
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 93%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 63%;    /* #A1A1A1  TextSecondary   */
+
+    --accent: 0 0% 10%;
+    --accent-foreground: 0 0% 93%;
+
+    --destructive: 358 100% 69%;     /* #FF6369  Error           */
+    --destructive-foreground: 0 0% 4%;
+
+    --success: 131 43% 57%;          /* #62C073  Success         */
+    --warning: 37 91% 55%;           /* #F5A623  Warning         */
+    --info: 212 100% 60%;            /* #3291FF  Info            */
+
+    --border: 0 0% 15%;              /* #262626  Divider         */
+    --input: 0 0% 15%;
+    --ring: 247 100% 74%;
+
+    --grid-line: 0 0% 100%;
+    --grid-alpha: 0.05;
+    --glow-alpha: 0.16;
+  }
+}
+
+/*
+  The docs take the same palette. Fumadocs' shadcn preset would read these tokens
+  directly, but it expects whole colours and ours are HSL triplets, so the
+  mapping is written out. One selector for both themes: the class is on <html>,
+  so each resolves against whichever palette is active there.
+*/
+:root,
+.dark,
+.dark #nd-sidebar {
+  --color-fd-background: hsl(var(--background));
+  --color-fd-foreground: hsl(var(--foreground));
+  --color-fd-muted: hsl(var(--muted));
+  --color-fd-muted-foreground: hsl(var(--muted-foreground));
+  --color-fd-popover: hsl(var(--popover));
+  --color-fd-popover-foreground: hsl(var(--popover-foreground));
+  --color-fd-card: hsl(var(--card));
+  --color-fd-card-foreground: hsl(var(--card-foreground));
+  --color-fd-border: hsl(var(--border));
+  --color-fd-primary: hsl(var(--primary));
+  --color-fd-primary-foreground: hsl(var(--primary-foreground));
+  --color-fd-secondary: hsl(var(--secondary));
+  --color-fd-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-fd-accent: hsl(var(--accent));
+  --color-fd-accent-foreground: hsl(var(--accent-foreground));
+  --color-fd-ring: hsl(var(--ring));
+}
+
+/* Fumadocs caps the docs grid and centres it, which on a wide screen leaves an
+   empty band outside the sidebar. Uncapped, the sidebar sits on the left edge
+   and the article keeps its own reading width. */
+#nd-docs-layout {
+  --fd-layout-width: 100vw;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /* Tailwind 4 gives buttons the default cursor; the site was designed with v3's pointer. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Sticky header, so an anchor lands below it rather than under it. */
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  ::selection {
+    background-color: hsl(var(--primary) / 0.25);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

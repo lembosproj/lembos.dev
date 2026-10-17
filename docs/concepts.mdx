@@ -1,0 +1,73 @@
+---
+title: Concepts
+description: The ideas the rest of Lembos is built on.
+---
+
+Lembos is more than a portal and more than a catalog. A portal is how people reach it, and a catalog is
+part of what it knows. Underneath both is a model with a few ideas that run through everything.
+
+## Everything is versioned
+
+Every building block — a blueprint, a component's configuration, an API contract, a policy, an
+environment — is a **named thing plus immutable versions**. The name is what everything refers to; a
+version is what a deployment pins.
+
+- A published version cannot change, so replaying a deployment a month later produces the same result.
+- Every versioned thing starts as a **draft**, so there is always somewhere to review a change before it is
+  live.
+- Environments can differ on purpose: staging one version ahead, one region on an older blueprint. That is
+  progressive delivery, not a failure to converge.
+
+## What should run, and what does
+
+For everything it delivers, Lembos records two facts separately: the **desired** state (what was asked
+for) and the **observed** state (what is actually there). The difference is **drift**.
+
+Recording only what is running tells you *what is running*, but not *whether that is what was asked for* —
+which is exactly the question after a half-finished rollout, a configuration published but never
+deployed, or a hand edit to a cluster. Closing the gap is the platform's job, whether by deploying,
+reconciling or rolling back.
+
+## The catalog
+
+The catalog records **what software exists and how it is related**: business domains, the software systems
+inside them, and each system's components, APIs and resources. It holds declarations only — never runtime
+facts — which is what lets one component run differently in different places.
+
+## Golden paths are blueprints
+
+A **blueprint** is a versioned recipe for building something: a component, a resource such as a database,
+or a whole environment. Each version pins its tool (Terraform or Helm), the tool's version and where its
+source lives. Platform teams publish blueprints; product teams pick one and supply the values it asks for.
+
+## Environments and slots
+
+An **environment** is a place to deliver into — dev, staging, a pull-request preview, production. An
+environment can be subdivided into **slots**: one per country for data residency, one per region for
+latency. A workload says which slots it occupies, so two systems sharing a production environment can
+still differ.
+
+## Releases
+
+A **release** is a fixed set of artifacts promoted together. It freezes its contents when it is ready and
+records every promotion, so *"where was this tested before production?"* always has an answer. A promotion
+can name specific slots, so a geographic rollout is an ordered series of promotions with a person able to
+check between them.
+
+## Three layers of access
+
+Every action is checked three ways:
+
+1. **Permission** — may this person or machine do this *kind* of thing at all? Roles grant permissions.
+2. **Ownership** — do they reach *this particular* thing? Every entity is owned by a group, and membership
+   of a parent group reaches what its children own.
+3. **Policy** — is this specific change allowed *right now*? Policies are conditions on facts, evaluated at
+   the moment of the request.
+
+Roles alone cannot express "production is limited to a few people while anyone may create a dev
+environment". The three layers can.
+
+## Nothing happens off the record
+
+Every change is written to the audit log, whether or not anything reacts to it, and every policy decision
+remembers the exact policy version it applied — so a later edit cannot rewrite what was enforced.

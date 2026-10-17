@@ -1,0 +1,37 @@
+---
+title: Security
+description: Network policies, what is never published, and running the images safely.
+---
+
+## Network policies
+
+With `networkPolicy.create` on (the default), every pod denies all traffic it does not expect. Two
+settings describe your cluster:
+
+- `networkPolicy.ingressController` — where your ingress controller or Gateway runs.
+- `networkPolicy.dns` — your cluster DNS.
+
+The Worker reaches whatever its blueprints need — registries, Git hosts, cloud APIs, target clusters — so
+`networkPolicy.workerEgress` allows everything until you narrow it. Narrowing it is worthwhile once you know
+where your blueprints go.
+
+## What is never published
+
+- **Identity's admin endpoint** runs on a separate port behind its own internal service. No ingress
+  points at it, and only the Worker may reach it.
+- **The Worker** accepts no connections at all.
+- **The Temporal UI** has no sign-in, so it is internal unless you publish it — and should be published
+  only through an internal ingress.
+
+## The images
+
+The images run without a shell or package manager, as a non-root user, on a read-only filesystem. Each
+service has its own Kubernetes service account with no token mounted. Every image is signed; see
+[Verifying the images](/docs/install/secrets#verifying-the-images).
+
+## Machines are accounts too
+
+Lembos's own background work — reconciling drift, running deployments, reading your directory — runs under
+service accounts with their own roles, recorded in the audit log like anyone else. Some permissions, such as
+using a cloud account's credentials, are held only by those machine roles and can never be given to a
+person.

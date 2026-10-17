@@ -1,0 +1,63 @@
+---
+title: Configure and ship
+description: Component configuration, releases, promotions, runs and drift.
+---
+
+## Configure a component
+
+A component's configuration is its **spec**: the values for the inputs its blueprint asks for, and where
+it should be placed. A spec is versioned with everything else, so the release that ships a version also
+ships its configuration — and a rollback takes the configuration back too.
+
+Values are layered: a common value, overridden per environment, overridden again per slot. A payment
+provider that differs per country is a slot override — not a fork of the component, and not a copy of the
+environment.
+
+A value can be:
+
+- written out literally;
+- read from somewhere else — another resource's connection string, an environment's output;
+- a **secret reference** — a vault path, a key and an optional version. The secret itself never passes
+  through Lembos; the deployment is handed the reference and mounts it.
+
+A component's **Versions** tab lists its spec versions and which one is in force:
+
+<Screenshot name="component-versions" ratio={3.4} alt="A component's spec versions: 1.0.0 published and in force, on blueprint 2.6.0, across two environments with a three-stop release path." />
+
+and its **Distribution** tab shows where it is placed and what each slot is running:
+
+<Screenshot name="component-distribution" ratio={3} alt="A component's distribution: the slots it occupies in each environment, the version deployed to each, and its health." />
+
+## Releases
+
+A **release** is a set of component artifacts that ship together. While it is being assembled you can
+change what is in it; once it is **ready**, its contents freeze.
+
+A release is then **promoted** into one environment after another. A promotion can name specific slots, so
+a rollout across regions is an ordered series of promotions — Germany, a look at the dashboards, then
+France.
+
+<Screenshot name="releases" ratio={2.6} alt="A release that went from the sandbox into production, where it deployed to the eu-west slot first and eu-north second." />
+
+Because every promotion is recorded, *"where was this version tested before production?"* always has an
+answer.
+
+## Runs
+
+Every attempt to make something match what was declared is a **run**: one component, resource or
+environment, in one slot, by one tool. A run records its steps, the exact configuration it was given, and
+the policy decisions made about it. If a policy asks for approval, the run waits for someone who may
+approve it — and the person who asked cannot approve their own run.
+
+Runs are durable: a Worker restarting mid-run hands the run to another.
+
+## Drift
+
+Lembos keeps what *should* be running and what *is* running as separate facts. When they differ — a
+rollout half-finished, a configuration never deployed, a hand edit to a cluster — the instance shows as
+drifted, and Lembos works to close the gap.
+
+## Rolling back
+
+A rollback is its own kind of event, not just a deployment of an older version. Policies can tell the two
+apart — a rollback often needs to skip gates a forward deployment must pass.

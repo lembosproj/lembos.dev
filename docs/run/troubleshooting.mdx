@@ -1,0 +1,20 @@
+---
+title: Troubleshooting
+description: Where to look when an installation misbehaves.
+---
+
+| Symptom                                               | Look at                                                                  |
+|-------------------------------------------------------|--------------------------------------------------------------------------|
+| The install fails before anything starts              | `kubectl -n lembos logs job/lembos-setup` — the setup job says what is missing |
+| `helm install` refuses to render                      | The message names the value or operator to fix                           |
+| A pod is not ready after several minutes              | `kubectl -n lembos logs deploy/lembos-<service>`                         |
+| Services restart a few times on first install         | Normal: they wait for PostgreSQL and Temporal to accept connections      |
+| Sign-in fails with a TLS or connection error          | Identity's public name does not resolve, or its certificate is not trusted, *inside* the cluster — see [Addresses](/docs/install/helm#addresses) |
+| Requests are refused with 400                         | The request arrived under a hostname the service was not given           |
+| The Portal disconnects every minute or so             | Your ingress closes idle WebSockets — raise its timeouts                 |
+| Everyone is signed out after a restart                | Redis lost its data; give it persistence                                 |
+| Invitations never arrive                              | Check the SMTP relay in `identity.smtp.endpoint`                         |
+| A run is stuck waiting                                | No Worker has room: check Worker capacity and scaling                    |
+
+On a local k3s, also see the
+[chart's troubleshooting table](https://github.com/lembosproj/deploy/blob/main/charts/lembos/README.md#when-something-is-wrong).

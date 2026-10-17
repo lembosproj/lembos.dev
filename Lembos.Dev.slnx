@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/apphost/">
+    <Project Path="src/apphost/Lembos.Dev.AppHost/Lembos.Dev.AppHost.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,45 @@
+---
+title: Environments and placement
+description: Declaring where software is delivered, and the rules for what may go there.
+---
+
+## Environments
+
+An **environment** is a place to deliver into. Each has:
+
+- a **stage** — dev, test, staging or prod — which policies can match on;
+- a **type** — *shared* by many systems, *dedicated* to one, or *ephemeral*;
+- an **environment blueprint**, which builds its landing zone;
+- **outputs** it shares with everything that runs in it — a tracing endpoint, a log level, a network.
+
+Environments are versioned like everything else: a change is a new version, reviewed as a draft first.
+
+### Slots
+
+An environment can be divided into **slots**, each described by dimensions such as `region=eu-west-1` or
+`country=DE`. Use slots for data residency, latency, or anything else where one environment needs several
+copies of the same workload. A slot can override the environment's outputs.
+
+<Screenshot name="environment-prod" ratio={1.5} alt="A production environment split into eu-north and eu-west slots, each healthy, with drift reported as matching what was asked for." />
+
+### Ephemeral environments
+
+An ephemeral environment carries a **lease**. A pull-request preview expires on its own instead of running
+up a bill until someone notices.
+
+## Placement rules
+
+A **placement rule** says which workloads may go into which environments — and, optionally, into which
+slots at most. Rules match workloads by business domain, system, owner or blueprint type, and either
+**allow** or **deny**. Deny is what makes "every domain except payments" expressible.
+
+When a component asks to be placed somewhere, Lembos checks it against the rules before anything runs.
+
+<Screenshot name="placement-rules" ratio={2.4} alt="The placement rules: here the single default rule, allowing every workload into every environment, with its slots, rank and status." />
+
+## Instances
+
+Under **Platform → Instances**, every building block in every slot of every environment shows what it
+should be running, what it was last seen running, and whether the two match.
+
+<Screenshot name="instances" ratio={2.3} alt="The instances: each component and resource in each environment and slot, with its lifecycle, drift and health." />

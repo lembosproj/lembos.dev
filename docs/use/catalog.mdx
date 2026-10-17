@@ -1,0 +1,43 @@
+---
+title: Describe your software
+description: Business domains, software systems, components, APIs and resources.
+---
+
+The catalog is where your organisation's software is written down: what exists, who owns it, and how it is
+connected. Find it under **Workspace**.
+
+<Screenshot name="catalog" ratio={2.8} alt="The catalog in the Portal, listing business domains with their type, parent, owner and status." />
+
+## The shape of the catalog
+
+- **Business domains** are areas of the business. They nest: a *business area* contains *capabilities*.
+- **Software systems** group the parts that deliver one capability, and optionally belong to a domain.
+- **Components** are the deployable pieces of a system — a service, a worker, a website.
+- **Resources** are what components depend on and that are provisioned rather than deployed — a database,
+  a cache, a queue.
+- **APIs** are the interfaces components provide or consume. An API's specification is versioned, so a
+  consumer can see what it integrated against after the next version lands.
+
+Every entry has a `namespace/name` that is unique for its type, a description, tags and links — and an
+**owner**, which is always a group.
+
+<Screenshot name="apis" ratio={3} alt="The APIs in the catalog, each with its type, owning system, latest published specification, lifecycle stage and status." />
+
+## Components and resources are typed by a blueprint
+
+When you add a component or a resource, you choose the [blueprint](/docs/use/golden-paths) that defines
+it. That is what tells Lembos what the thing *is* and how to build it — "a web service on our standard
+chart", not a free-text label.
+
+## Relations
+
+A component records what it **provides**, what it **consumes** and what it **depends on**. The Portal draws
+these as a graph on the component's page, so you can see what a change might touch.
+
+<Screenshot name="component" alt="A component's page, showing its blueprint, owner and system, and a graph of the API it consumes and the cache it depends on." />
+
+## Lifecycle
+
+Components and APIs carry a lifecycle stage — experimental, beta, production, deprecated, retired — so
+consumers can see how far to trust them. Anything can be archived when it is no longer needed; its history
+stays.

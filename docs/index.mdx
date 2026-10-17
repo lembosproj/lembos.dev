@@ -1,0 +1,53 @@
+---
+title: Introduction
+description: What Lembos is, who it is for, and how these docs are organised.
+---
+
+Lembos is an internal developer platform. It records the software your organisation has, the shape that
+software should take in every environment, and what is actually running — and it closes the gap between
+the two.
+
+Most engineering organisations answer three questions with three systems that disagree with each other:
+*what software do we have*, *what is running where*, and *was it allowed to get there*. Lembos answers all
+three in one place, from one model.
+
+## Who it is for
+
+| You are…                  | Lembos gives you…                                                                      |
+|---------------------------|----------------------------------------------------------------------------------------|
+| **A product team**        | Self-service delivery on a golden path, without becoming an expert in the runtime      |
+| **A platform team**       | One place to publish, evolve and retire the paths every team builds on                 |
+| **Security and compliance** | Policy applied before work is dispatched, and a history you can reconstruct           |
+| **Engineering leadership** | A single, trustworthy view of what exists, where it runs and how it got there         |
+
+## How it runs
+
+There is no hosted Lembos. You install it into a Kubernetes cluster you operate, and it provisions into
+the cloud accounts and clusters you already own. It is open source under the Apache 2.0 licence.
+
+## How these docs are organised
+
+<Cards>
+  <Card title="Concepts" href="/docs/concepts">
+    The handful of ideas everything else is built on.
+  </Card>
+  <Card title="Quickstart" href="/docs/quickstart">
+    Lembos on your laptop, on a local k3s, in about fifteen minutes.
+  </Card>
+  <Card title="Install" href="/docs/install">
+    Putting Lembos into a cluster your organisation runs.
+  </Card>
+  <Card title="Run" href="/docs/run/upgrades">
+    Upgrading, scaling, securing and troubleshooting an installation.
+  </Card>
+  <Card title="Use" href="/docs/use">
+    Describing your software, publishing golden paths and shipping releases.
+  </Card>
+  <Card title="Reference" href="/docs/reference/roles">
+    Built-in roles and the words Lembos uses.
+  </Card>
+</Cards>
+
+<Callout title="Pre-1.0">
+  Lembos is under active development. Expect these pages, and the platform, to change between releases.
+</Callout>

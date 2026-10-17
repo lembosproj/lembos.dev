@@ -1,0 +1,4 @@
+{
+  "title": "Install",
+  "pages": ["index", "helm", "dependencies", "secrets", "github"]
+}

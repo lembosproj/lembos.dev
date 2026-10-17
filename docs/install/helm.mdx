@@ -1,0 +1,68 @@
+---
+title: Install with Helm
+description: Put Lembos into your cluster and sign in for the first time.
+---
+
+## Install
+
+Two values have no default: the **domain** every service is published under, and the **SMTP relay** that
+sends invitations and password resets.
+
+```bash
+helm upgrade --install lembos oci://ghcr.io/lembosproj/charts/lembos --version 0.1.0 \
+  --namespace lembos --create-namespace \
+  --set global.domain=idp.example.com \
+  --set identity.smtp.endpoint=smtp://relay.example.com:25
+```
+
+For anything beyond a trial, keep your settings in a values file and pass it with `-f`. The chart's
+[`values.yaml`](https://github.com/lembosproj/deploy/blob/main/charts/lembos/values.yaml) documents every
+setting, and
+[`values-ha.yaml`](https://github.com/lembosproj/deploy/blob/main/charts/lembos/values-ha.yaml) is a
+complete high-available example.
+
+<Callout>
+  Every setting under `platform:` is checked against the platform's own schema. A misspelt or unknown key
+  fails `helm install` instead of being silently ignored.
+</Callout>
+
+## Addresses
+
+Each published service answers at `<service>.<global.domain>` — `portal.idp.example.com` and so on — or at
+its own `host` if you set one. These names matter: sign-in redirects and token issuers are derived from
+them, so they must be the names people's browsers use.
+
+The services also call Identity at its **public** address from inside the cluster, so that name must
+resolve there and its certificate must be trusted:
+
+- **Resolution** — public DNS usually handles it. If not, use `global.hostAliases` or a CoreDNS override.
+- **Trust** — a publicly trusted certificate needs nothing. For a private CA, add it with
+  `global.trustedCertificates`.
+
+## Publishing
+
+Turn on `ingress.enabled`, `gateway.enabled`, or both. Two things need attention:
+
+- **Long-lived connections.** The Portal and the Orchestrator keep WebSockets open for as long as a session
+  lasts. The chart sets an hour-long timeout for ingress-nginx; for other controllers, set the equivalent
+  in `<service>.ingress.annotations`, or `gateway.timeouts` for a Gateway.
+- **More than one Portal replica** needs sticky sessions. `values-ha.yaml` shows the ingress-nginx
+  annotations.
+
+You must also tell Lembos where your ingress controller runs, with
+`global.forwardedHeaders.knownNetworks` (its pod network) or `knownProxies` (its addresses). Lembos only
+trusts client addresses forwarded from there, because sign-in rate limiting depends on them; the install
+refuses to render without one.
+
+## First sign-in
+
+When every pod is ready, open the Portal and sign in as the bootstrap administrator, `admin@lembos.local`,
+with the password the setup job generated:
+
+```bash
+kubectl -n lembos get secret lembos-secrets -o jsonpath='{.data.identity-admin-password}' | base64 -d; echo
+```
+
+Or set your own beforehand — see [Secrets and keys](/docs/install/secrets).
+
+From there, [invite people or connect GitHub](/docs/install/github), and read [Using Lembos](/docs/use).

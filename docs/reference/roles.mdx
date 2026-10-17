@@ -1,0 +1,58 @@
+---
+title: Built-in roles
+description: The roles Lembos ships with, and what each one may do.
+---
+
+Roles answer *may this principal do this kind of thing at all?* Whether they reach a **particular** thing
+is decided by group ownership, and whether a particular change is allowed now by
+[policy](/docs/use/governance). See [People and access](/docs/use/access).
+
+## Roles for people
+
+### Contributor
+
+For the people who build and ship.
+
+- **Catalog** — create, change and archive business domains, systems, components, APIs and resources.
+- **Delivery** — request and manage runs; assemble releases and promote them.
+- **Everything else** — read only: environments, placement rules, instances, blueprints, artifacts,
+  execution targets, source credentials, policies and the audit log; users, groups and roles.
+
+A Contributor cannot see the list of service accounts.
+
+### Maintainer
+
+For the platform team.
+
+- **Infrastructure** — create, change and archive blueprints and execution targets; manage source
+  credentials and artifacts, including quarantining an artifact.
+- **Delivery** — create, change and archive environments and placement rules; **approve** runs; promote
+  releases.
+- **Governance** — create, change and archive policies; read the audit log.
+- **Everything else** — read only, service accounts included.
+
+A Maintainer approves other people's runs but cannot request runs of their own, so an approval always means
+a second person agreed.
+
+### Administrator
+
+Everything a person can do on the platform, including inviting and managing users and managing groups,
+roles and service accounts.
+
+## Roles only machines hold
+
+Three roles exist for Lembos's own background work and can never be given to a person:
+
+| Role            | Held by                  | Does                                                            |
+|-----------------|--------------------------|-----------------------------------------------------------------|
+| **Executor**    | The execution agent      | Runs provisioning and deployment work, using execution-target and source credentials |
+| **Reconciler**  | The drift reconciler     | Reads what should be running and reports what is                |
+| **Provisioner** | The directory synchronizer | Creates and retires accounts from your directory              |
+
+Using a cloud account's credentials or a private source's secret are permissions only the Executor holds,
+and every use is audited.
+
+## Your own roles
+
+Administrators can create roles from any combination of permissions — for instance, splitting "assemble a
+release" from "promote it to production". Built-in roles cannot be renamed or archived.

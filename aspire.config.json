@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "src/apphost/Lembos.Dev.AppHost/Lembos.Dev.AppHost.csproj"
+  }
+}
