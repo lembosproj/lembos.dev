@@ -57,9 +57,12 @@ lembos-admin-password
 Invitations, confirmations and password resets land in the mail catcher; nothing leaves your machine.
 
 <Callout title="Want something to look at?">
-  The catalog starts empty. To explore with a sample organisation — an invented retailer with systems,
-  components, APIs and a two-region production environment — set `orchestrator.sampleData: true` in
+  The catalog starts empty. To browse a sample organisation — an invented retailer with teams, systems,
+  components, APIs, blueprints and environments — set `orchestrator.sampleData: true` in
   `aspire/Lembos.Deploy.AppHost/values.aspire.yaml`, then `aspire stop` and `aspire start`.
+
+  The sample is for reading. Its cloud accounts point at a local AWS emulator the quickstart does not run,
+  so checking them or provisioning its environments fails here.
 </Callout>
 
 ## 3. Watch it run
