@@ -20,6 +20,12 @@ An environment can be divided into **slots**, each described by dimensions such 
 `country=DE`. Use slots for data residency, latency, or anything else where one environment needs several
 copies of the same workload. A slot can override the environment's outputs.
 
+A slot can be **cordoned** — nothing new lands there, and what stands there stays and is kept current — or
+**drained**, when what stands there has to leave. Draining refuses any new release of a spec version that
+still names the slot and lists each placement that must leave on its component's or resource's page and on
+the home page. A drain can carry a deadline, which is a notice to those owners and not a removal: the platform
+tears nothing down for them.
+
 <Screenshot name="environment-prod" ratio={1.5} alt="A production environment split into eu-north and eu-west slots, each healthy, with drift reported as matching what was asked for." />
 
 ## Placement rules
