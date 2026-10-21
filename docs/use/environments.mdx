@@ -8,7 +8,7 @@ description: Declaring where software is delivered, and the rules for what may g
 An **environment** is a place to deliver into. Each has:
 
 - a **stage** — dev, test, staging or prod — which policies can match on;
-- a **type** — *shared* by many systems, *dedicated* to one, or *ephemeral*;
+- a **type** — *shared* by many systems or *dedicated* to one;
 - an **environment blueprint**, which builds its landing zone;
 - **outputs** it shares with everything that runs in it — a tracing endpoint, a log level, a network.
 
@@ -21,11 +21,6 @@ An environment can be divided into **slots**, each described by dimensions such 
 copies of the same workload. A slot can override the environment's outputs.
 
 <Screenshot name="environment-prod" ratio={1.5} alt="A production environment split into eu-north and eu-west slots, each healthy, with drift reported as matching what was asked for." />
-
-### Ephemeral environments
-
-An ephemeral environment carries a **lease**. A pull-request preview expires on its own instead of running
-up a bill until someone notices.
 
 ## Placement rules
 
