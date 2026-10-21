@@ -13,6 +13,10 @@ An **execution target** is somewhere Lembos is allowed to build into — a cloud
 site, a Kubernetes cluster. Registering one is a deliberate act by the platform team; a blueprint can never
 create one.
 
+Today a target is one of three kinds. An **AWS account** is where Terraform blueprints build; a **Kubernetes
+cluster**, or an **on-premises site** (a cluster whose hardware you own), is where Helm blueprints deploy.
+Azure subscriptions and GCP projects are listed where a target is registered and cannot be registered yet.
+
 <Screenshot name="execution-targets" ratio={2.3} alt="The execution targets: Kubernetes clusters and AWS accounts, each with its provider, whether it is reachable, its type and its capabilities." />
 
 Lembos checks the connection the moment a target is registered or changed, and on request, so a wrong role
@@ -35,8 +39,8 @@ each fetch gets a short-lived, read-only token for one repository.
 Each blueprint version pins:
 
 - **What it builds** — a component, a resource, or an environment.
-- **The tool** — Terraform or Helm — and the exact version of it, chosen from that tool's published
-  releases.
+- **The tool** — Terraform, which builds into an AWS account, or Helm, which deploys into a cluster — and the
+  exact version of it, chosen from that tool's published releases.
 - **The source** — a Git repository or OCI registry, optionally pinned to a digest.
 - **Its inputs and outputs** — what it asks for, who may answer each input (the product team or the
   environment), and what it promises back.
