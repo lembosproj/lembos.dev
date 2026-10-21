@@ -55,7 +55,12 @@ Runs are durable: a Worker restarting mid-run hands the run to another.
 
 Lembos keeps what *should* be running and what *is* running as separate facts. When they differ — a
 rollout half-finished, a configuration never deployed, a hand edit to a cluster — the instance shows as
-drifted, and Lembos works to close the gap.
+drifted.
+
+What is running is recorded by runs: each one reports what it found and what it built, so drift is known as
+of the last run that touched the instance. Nothing re-observes on a schedule yet, and nothing acts on drift
+by itself: the next run closes it — a deployment, a rollback, or a release reaching the environment. An
+instance nothing has reported on shows as unobserved, never as in sync.
 
 ## Rolling back
 

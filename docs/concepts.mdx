@@ -25,8 +25,9 @@ for) and the **observed** state (what is actually there). The difference is **dr
 
 Recording only what is running tells you *what is running*, but not *whether that is what was asked for* —
 which is exactly the question after a half-finished rollout, a configuration published but never
-deployed, or a hand edit to a cluster. Closing the gap is the platform's job, whether by deploying,
-reconciling or rolling back.
+deployed, or a hand edit to a cluster. Closing the gap is a run: a deployment, a rollback, or a release
+reaching the environment. Each run records what it observed, so drift is known as of the last run and shown
+until the next one closes it.
 
 ## The catalog
 

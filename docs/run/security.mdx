@@ -31,7 +31,7 @@ service has its own Kubernetes service account with no token mounted. Every imag
 
 ## Machines are accounts too
 
-Lembos's own background work — reconciling drift, running deployments, reading your directory — runs under
+Lembos's own background work — running deployments, checking connections, reading your directory — runs under
 service accounts with their own roles, recorded in the audit log like anyone else. Some permissions, such as
 using a cloud account's credentials, are held only by those machine roles and can never be given to a
 person.
