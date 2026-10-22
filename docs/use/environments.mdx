@@ -24,7 +24,9 @@ A slot can be **cordoned** — nothing new lands there, and what stands there st
 **drained**, when what stands there has to leave. Draining refuses any new release of a spec version that
 still names the slot and lists each placement that must leave on its component's or resource's page and on
 the home page. A drain can carry a deadline, which is a notice to those owners and not a removal: the platform
-tears nothing down for them.
+tears nothing down for them. Each owner tears theirs down from the slot's drain plan, or leaves by publishing a
+version without the slot; the slot's own teardown can be asked for right away and runs once the last placement
+is gone.
 
 <Screenshot name="environment-prod" ratio={1.5} alt="A production environment split into eu-north and eu-west slots, each healthy, with drift reported as matching what was asked for." />
 
