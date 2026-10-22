@@ -1,0 +1,111 @@
+---
+title: Publish from CI
+description: Register every build your pipeline pushes as an artifact of its component, with its provenance.
+---
+
+A component ships **artifacts**: the builds a release carries from environment to environment. The platform
+learns about a build when your pipeline tells it, right after the push, so nobody has to type a digest into
+the Portal. Each build is registered by its content digest, labelled by its tag, and records where it came
+from: the repository, commit, ref and CI run. It then appears on the component's **Artifacts** tab, ready
+for a release.
+
+For GitHub Actions there is a ready-made step, the
+[publish-artifact action](https://github.com/lembosproj/platform/tree/main/src/Integrations/GitHub/publish-artifact).
+Any other CI system can make the same call to the API; see [The call itself](#the-call-itself).
+
+## 1. Get a service account
+
+A pipeline signs in as a [service account](/docs/use/access#service-accounts), never as a person. Ask an
+Administrator for one per CI system, for example one for your GitHub organisation. It needs:
+
+| What      | Set to                                                                                                                                                                                                |
+|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Owner** | The team that owns the components the pipeline builds, or a group above all of them. Owning gives the account reach over that group's subtree, and publishing needs reach over the component's owner. |
+| **Role**  | **Maintainer**, or a custom role with `infrastructure:artifacts:write`, `infrastructure:artifacts:read` and `catalog:components:read`.                                                                |
+
+Creating the account downloads its private key once, as `<client id>.pem`. Lembos keeps only the public
+half.
+
+<Callout type="warn">
+An account reaches what its owning group reaches. If one pipeline builds components of two teams with no
+group above them, it gets a second account, not a wider one.
+</Callout>
+
+## 2. Store the key in your CI system
+
+In GitHub, add two secrets to the repository, or to the organisation so every repository can use them:
+
+| Secret               | Value                                               |
+|----------------------|-----------------------------------------------------|
+| `LEMBOS_CLIENT_ID`   | The account's client id                             |
+| `LEMBOS_PRIVATE_KEY` | The whole `.pem` file, BEGIN and END lines included |
+
+The platform's addresses are not secret. Keep them as variables, `LEMBOS_IDENTITY_URL` and
+`LEMBOS_ORCHESTRATOR_URL`. Set at the organisation, with access for the repositories that publish, all
+four are configured once and no repository needs its own.
+
+## 3. Add the step after your push
+
+```yaml
+- id: build
+  uses: docker/build-push-action@v6
+  with:
+    push: true
+    tags: ghcr.io/acme/apps/order-api:${{ github.sha }}
+
+- uses: lembosproj/platform/src/Integrations/GitHub/publish-artifact@v0.3.0
+  with:
+    client-id: ${{ secrets.LEMBOS_CLIENT_ID }}
+    private-key: ${{ secrets.LEMBOS_PRIVATE_KEY }}
+    identity-url: ${{ vars.LEMBOS_IDENTITY_URL }}
+    orchestrator-url: ${{ vars.LEMBOS_ORCHESTRATOR_URL }}
+    component: ordering/order-api
+    repository: ghcr.io/acme/apps/order-api
+    digest: ${{ steps.build.outputs.digest }}
+    tag: ${{ github.sha }}
+```
+
+`component` is the qualified name the Portal shows, which stays the same from one installation to the
+next. `type` defaults to `OciImage`; `HelmChart` and `Archive` are the others. The action's README lists
+every input and output.
+
+Pin the action to the tag of the platform release you run. Each release publishes the program the
+action runs, built against that release's API. The action downloads it for the runner, Linux or Windows
+on x64 or ARM64, and checks it against the release's digest, so the job needs no .NET or other setup.
+
+## What happens on a run
+
+- **Re-runs are safe.** If the component already has this digest, the step succeeds and returns the
+  artifact registered the first time, with that run's provenance.
+- **One digest, one component.** If the same bytes are registered to another component, the step fails and
+  names it. To ship one build as several components, push it to a repository for each. One push to several
+  repositories keeps the digest the same.
+- **Refusals carry the platform's words.** The step fails with the API's own error, in the log and as an
+  annotation on the run: a missing permission, a group the account does not reach, an unknown component or
+  type, or a digest that is not one.
+
+## The call itself
+
+Without the action, a pipeline [obtains a token](/docs/use/access#obtaining-a-token) for the account and
+sends one mutation to `https://<orchestrator>/graphql`:
+
+```graphql
+mutation {
+  publishArtifact(input: {
+    componentId: "<the component's id>"
+    type: "OciImage"
+    repository: "ghcr.io/acme/apps/order-api"
+    digest: "sha256:…"
+    tag: "1.4.2"
+    provenance: {
+      sourceRepository: "https://github.com/acme/apps"
+      sourceCommit: "<commit>"
+      sourceRef: "refs/heads/main"
+      buildRef: "<the run's URL>"
+    }
+  }) { id coordinate }
+}
+```
+
+`ownerId` may be left out; the artifact then belongs to the component's owner. To go from a name to an id,
+ask `componentByName(name: "ordering/order-api") { id }` first.

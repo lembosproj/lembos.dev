@@ -60,7 +60,8 @@ can be **deprecated** (still usable, discouraged) or **withdrawn** (no longer of
 ## Artifacts
 
 An **artifact** is a specific built thing — an image, a chart — identified by its content digest, with a
-record of where it was built from. An artifact can be quarantined, which stops it from being deployed
+record of where it was built from. A pipeline registers each build after it pushes it; see
+[Publish from CI](/docs/use/ci). An artifact can be quarantined, which stops it from being deployed
 anywhere.
 
 <Screenshot name="artifacts" ratio={3} alt="The artifacts: container images, each with the component it belongs to, its digest, its supply-chain state — signature and SBOM — and its status." />
