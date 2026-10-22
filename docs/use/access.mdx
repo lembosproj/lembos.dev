@@ -67,16 +67,16 @@ pair is minted and downloaded while the old keys keep working, so switch the sys
 then remove the old one from the page. An account in service always keeps at least one key, and holds at
 most five.
 
-Two things are available through the API rather than the Portal: giving an account a public key you
-generated yourself (RSA from 2048 bits or ECDSA on P-256, P-384 or P-521), so the private key never leaves
-your system; and a **secret** instead of a key, shown once and sent with every token request, for a client
-that cannot sign.
+One thing is available through the API rather than the Portal: giving an account a public key you generated
+yourself (RSA from 2048 bits or ECDSA on P-256, P-384 or P-521), so the private key never leaves your
+system. There is no shared-secret option for a service account; the platform's own machines authenticate
+with keys too, and the only client secrets Lembos keeps are for its own web applications.
 
 ### Obtaining a token
 
-Both kinds use the `client_credentials` grant at the Identity Server's token endpoint,
-`https://<identity>/connect/token`, with `scope=platform`. A secret account sends `client_id` and
-`client_secret` as form fields. A key account sends a signed **client assertion** instead:
+A machine uses the `client_credentials` grant at the Identity Server's token endpoint,
+`https://<identity>/connect/token`, with `scope=platform`, and authenticates with a signed **client
+assertion** rather than a secret:
 
 | Claim or header | Value                                                             |
 |-----------------|-------------------------------------------------------------------|
