@@ -72,3 +72,8 @@ instance nothing has reported on shows as unobserved, never as in sync.
 
 A rollback is its own kind of event, not just a deployment of an older version. Policies can tell the two
 apart — a rollback often needs to skip gates a forward deployment must pass.
+
+To roll back, open the earlier rollout you want to return to — on the component's Releases tab, in the stage it
+ran in — and choose **Roll back to this**. Lembos requests a run of that rollout's build and spec version into the
+same slot, so the configuration goes back with it, and marks the rollout standing there as rolled back once it
+completes. The run is planned and reviewed like any other.
