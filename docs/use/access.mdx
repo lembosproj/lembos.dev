@@ -51,3 +51,60 @@ When a service account acts on a person's behalf, it can do only what *both* of 
 <Screenshot name="service-accounts" ratio={2.8} alt="The service accounts: the platform's own agents, each with what it does, whether it acts on its own or only for a person, its reach and its status." />
 
 Maintainers and Administrators can see each service account's roles, effective permissions and reach.
+
+Lembos ships with its own service accounts, which run its background work and are only ever narrowed or
+widened in where they reach. An Administrator creates the others: one per CI system or integration, owned
+by the team it serves and reaching what that team owns from the start. The account's page says when
+Identity has confirmed its credential, usually within seconds; a token request made before that is refused.
+From the same page an Administrator assigns roles (the ones a person could hold) and archives the account,
+which revokes everything it holds.
+
+An account proves itself with a **key pair**, the way a GitHub App does. Creating one mints the pair and
+downloads the **private key once**, as a PEM file named after the client id; Lembos keeps only the public
+half, so there is nothing stored to leak and nothing to show again. Put the file where the system that
+will use it can read it, and nowhere else. To rotate, choose **Rotate key** on the account's page: a new
+pair is minted and downloaded while the old keys keep working, so switch the system to the new key and
+then remove the old one from the page. An account in service always keeps at least one key, and holds at
+most five.
+
+Two things are available through the API rather than the Portal: giving an account a public key you
+generated yourself (RSA from 2048 bits or ECDSA on P-256, P-384 or P-521), so the private key never leaves
+your system; and a **secret** instead of a key, shown once and sent with every token request, for a client
+that cannot sign.
+
+### Obtaining a token
+
+Both kinds use the `client_credentials` grant at the Identity Server's token endpoint,
+`https://<identity>/connect/token`, with `scope=platform`. A secret account sends `client_id` and
+`client_secret` as form fields. A key account sends a signed **client assertion** instead:
+
+| Claim or header | Value                                                             |
+|-----------------|-------------------------------------------------------------------|
+| `typ` (header)  | `client-authentication+jwt`                                       |
+| `alg` (header)  | `RS256` for an RSA key; `ES256`, `ES384` or `ES512` for ECDSA     |
+| `kid` (header)  | The key id shown on the account's page                            |
+| `iss` and `sub` | The client id                                                     |
+| `aud`           | The Identity Server's issuer URL, exactly as it serves it         |
+| `jti`           | A fresh random id per assertion                                   |
+| `iat` and `exp` | Now, and a few minutes later — an assertion is single-use and short |
+
+```bash
+# An RS256 assertion with openssl alone; any JWT library does the same in one call.
+b64() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+now=$(date +%s)
+header=$(printf '{"alg":"RS256","typ":"client-authentication+jwt","kid":"%s"}' "$KEY_ID" | b64)
+claims=$(printf '{"iss":"%s","sub":"%s","aud":"%s","jti":"%s","iat":%d,"exp":%d}' \
+  "$CLIENT_ID" "$CLIENT_ID" "$ISSUER" "$(uuidgen)" "$now" "$((now + 300))" | b64)
+signature=$(printf '%s.%s' "$header" "$claims" | openssl dgst -sha256 -sign private.pem | b64)
+
+curl -s "$ISSUER/connect/token" \
+  -d grant_type=client_credentials \
+  -d scope=platform \
+  -d client_id="$CLIENT_ID" \
+  -d client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer \
+  -d client_assertion="$header.$claims.$signature"
+```
+
+The reply's `access_token` is a bearer token for the Orchestrator's API, good for a few minutes; ask for
+another rather than keeping one. The token endpoint budgets requests per client as well as per address, so
+a job that retries in a tight loop is told to slow down with a `429` and a `Retry-After`.
