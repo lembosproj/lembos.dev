@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.6.1" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.6.3" />
     <!--
     Nothing here references MessagePack. Aspire.Hosting 13.6.1 brings 2.5.302, which carries a known
     vulnerability (GHSA-qhrr-8q5h-9q3h); this lifts it to the patched line. Drop it once Aspire depends on
