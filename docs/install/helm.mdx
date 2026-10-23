@@ -5,15 +5,22 @@ description: Put Lembos into your cluster and sign in for the first time.
 
 ## Install
 
-Two values have no default: the **domain** every service is published under, and the **SMTP relay** that
-sends invitations and password resets.
+Two things have no default: the **domain** every service is published under, and the **SMTP relay** that
+sends invitations and password resets, with its login.
 
 ```bash
 helm upgrade --install lembos oci://ghcr.io/lembosproj/charts/lembos --version {{chartVersion}} \
   --namespace lembos --create-namespace \
   --set global.domain=idp.example.com \
-  --set identity.smtp.endpoint=smtp://relay.example.com:25
+  --set identity.smtp.endpoint=smtp://relay.example.com:587 \
+  --set identity.smtp.username=lembos@example.com \
+  --set identity.smtp.password=<relay password>
 ```
+
+Every invitation and password-reset link is a credential, so Lembos reaches the relay over STARTTLS and
+signs in to it, and the install refuses a relay without either. A relay that wants TLS from the first byte
+takes an `smtps://` endpoint and `identity.smtp.security: Tls`. Keep the password out of a committed values
+file with `identity.smtp.existingSecret`.
 
 For anything beyond a trial, keep your settings in a values file and pass it with `-f`. The chart's
 [`values.yaml`](https://github.com/lembosproj/deploy/blob/main/charts/lembos/values.yaml) documents every
@@ -52,6 +59,15 @@ Turn on `ingress.enabled`, `gateway.enabled`, or both. Two things need attention
   in `<service>.ingress.annotations`, or `gateway.timeouts` for a Gateway.
 - **More than one Portal replica** needs sticky sessions. `values-ha.yaml` shows the ingress-nginx
   annotations.
+
+- **HTTPS behind the ingress.** Each service serves HTTPS itself, with a certificate the setup job issues
+  for its in-cluster names, so the hop from the ingress controller to the service is encrypted too. The
+  chart sets this up for ingress-nginx and for Traefik, and for a Gateway through a `BackendTLSPolicy` per
+  route (Gateway API 1.4 or later). For another controller, add its equivalent to `ingress.annotations`, or
+  run a service mesh and set `listeners.mode: mesh` with `listeners.mesh.name`.
+
+Health checks answer on a management port of their own, which the ingress never routes to, so the public
+addresses do not reveal which dependency is down.
 
 You must also tell Lembos where your ingress controller runs, with
 `global.forwardedHeaders.knownNetworks` (its pod network) or `knownProxies` (its addresses). Lembos only

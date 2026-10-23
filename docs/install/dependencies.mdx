@@ -27,10 +27,27 @@ helm upgrade --install cnpg cnpg/cloudnative-pg --namespace cnpg-system --create
 Without the operator, a high-available install can still use an **external** managed database. Give
 Lembos a user that may create databases, or create them ahead of time.
 
+Every connection to a high-available PostgreSQL is encrypted and verified (`VerifyFull`) against the CA the
+operator issues the cluster's certificates from. An external server is reached with `Require` at least, set
+in `postgresql.external.sslMode`; to verify its certificate too, use `VerifyFull` and name its CA in
+`postgresql.external.ca` unless a public one issued it. The install refuses `Disable`, `Allow` and `Prefer`,
+which let the password and every row cross the network in clear.
+
+<Callout>
+  The simple PostgreSQL is reached in plain TCP: one pod beside the services, in their own namespace,
+  behind network policies that admit nothing else.
+</Callout>
+
 ## Redis
 
 Redis holds the Portal's sign-in keys beside the sessions they protect: losing it signs everyone out. The
 simple Redis persists to disk for that reason.
+
+Every Redis takes a password: the setup job generates one for the simple and high-available modes, and an
+external Redis needs its own in `redis.external.password` or `existingSecret` — the install refuses one
+without. High-available Redis is reached over TLS, through HAProxy, with a certificate the setup job issues.
+An external Redis is reached over TLS too (`redis.external.tls`, on by default); name its CA in
+`redis.external.ca` if a private one issued its certificate. Like PostgreSQL, the simple Redis stays plain.
 
 ## Temporal
 
@@ -38,12 +55,27 @@ Temporal runs every provisioning and deployment workflow durably, so a run inter
 up where it left off. The simple mode runs all of Temporal in one process; high-available uses Temporal's
 own chart.
 
-<Callout type="warn">
-  Lembos talks to Temporal over plain gRPC in the `default` namespace. TLS, API keys and Temporal Cloud are
-  not supported yet.
-</Callout>
+Temporal's frontend is where every workflow is started, signalled and stopped, so it answers only the
+platform. In the simple and high-available modes it requires mutual TLS: the setup job issues its
+certificate and the client certificate the Lembos services, the Temporal UI and the Worker's autoscaler
+present to it, and a caller without one is refused. To use certificates from cert-manager instead, give
+both in `temporal.tls.existingSecret` and `existingClientSecret`, issued by one CA.
 
-The Temporal UI has no sign-in of its own, so it is internal by default. Reach it with a port-forward:
+An **external** frontend needs one of two credentials, and the install refuses neither:
+
+- **A client certificate** it verifies, as a `kubernetes.io/tls` Secret in
+  `temporal.external.clientCertificate.existingSecret`, with its CA in `temporal.external.ca` if private.
+- **An API key**, for Temporal Cloud, in `temporal.external.apiKey`. The Temporal UI cannot use an API key;
+  use Temporal Cloud's own UI and set `temporal.ui.enabled: false`.
+
+### The Temporal UI
+
+The UI signs people in through Lembos Identity, and only **Administrators** are let in: anyone it admits can
+read every workflow's inputs and stop any of them. It answers at `temporal.<your domain>` once published
+with `temporal.ui.ingress.enabled`; the install refuses to publish it with sign-in switched off.
+
+Without publishing it, reach it with a port-forward, and turn sign-in off for that
+(`temporal.ui.auth.enabled: false`), since Identity redirects back to the published name:
 
 ```bash
 kubectl -n lembos port-forward svc/lembos-temporal-ui 8080:8080
