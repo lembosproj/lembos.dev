@@ -41,18 +41,61 @@ group above them, it gets a second account, not a wider one.
 
 ## 2. Store the key in your CI system
 
-In GitHub, add two secrets to the repository, or to the organisation so every repository can use them:
+Each CI system keeps four values: the account's client id and private key, which are secret, and the
+platform's two addresses, which are not. Set them once where every repository that publishes can use them.
+
+<Tabs groupId="ci" persist items={["GitHub Actions", "GitLab", "Azure Pipelines"]}>
+<Tab value="GitHub Actions">
+
+Add two secrets to the repository, or to the organisation so every repository can use them:
 
 | Secret               | Value                                               |
 |----------------------|-----------------------------------------------------|
 | `LEMBOS_CLIENT_ID`   | The account's client id                             |
 | `LEMBOS_PRIVATE_KEY` | The whole `.pem` file, BEGIN and END lines included |
 
-The platform's addresses are not secret. Keep them as variables, `LEMBOS_IDENTITY_URL` and
-`LEMBOS_ORCHESTRATOR_URL`. Set at the organisation, with access for the repositories that publish, all
-four are configured once and no repository needs its own.
+Keep the addresses as variables, `LEMBOS_IDENTITY_URL` and `LEMBOS_ORCHESTRATOR_URL`. Set at the
+organisation, with access for the repositories that publish, all four are configured once.
+
+</Tab>
+<Tab value="GitLab">
+
+Add four CI/CD variables to the group that holds the projects that publish, under **Settings → CI/CD →
+Variables**. Every project in the group inherits them.
+
+| Variable                  | Value                                      | Visibility        |
+|---------------------------|--------------------------------------------|-------------------|
+| `LEMBOS_CLIENT_ID`        | The account's client id                    | Masked            |
+| `LEMBOS_PRIVATE_KEY`      | The `.pem` file base64-encoded on one line | Masked and hidden |
+| `LEMBOS_IDENTITY_URL`     | The Identity Server's address              | Visible           |
+| `LEMBOS_ORCHESTRATOR_URL` | The Orchestrator API's address             | Visible           |
+
+GitLab masks only a value on one line without spaces, which a `.pem` file is not. Encode it with
+`openssl base64 -A -in <client id>.pem`; the step reads either form. Mark the variables **Protected** and
+only pipelines on protected branches and tags can publish.
+
+</Tab>
+<Tab value="Azure Pipelines">
+
+Add a variable group under **Pipelines → Library**, open to the pipelines that publish:
+
+| Variable                  | Value                                      | Secret |
+|---------------------------|--------------------------------------------|--------|
+| `LEMBOS_CLIENT_ID`        | The account's client id                    | no     |
+| `LEMBOS_PRIVATE_KEY`      | The `.pem` file base64-encoded on one line | yes    |
+| `LEMBOS_IDENTITY_URL`     | The Identity Server's address              | no     |
+| `LEMBOS_ORCHESTRATOR_URL` | The Orchestrator API's address             | no     |
+
+A secret is typed on one line, which a `.pem` file is not. Encode it with
+`openssl base64 -A -in <client id>.pem`; the step reads either form.
+
+</Tab>
+</Tabs>
 
 ## 3. Add the step after your push
+
+<Tabs groupId="ci" persist items={["GitHub Actions", "GitLab", "Azure Pipelines"]}>
+<Tab value="GitHub Actions">
 
 ```yaml
 - id: build
@@ -73,13 +116,84 @@ four are configured once and no repository needs its own.
     tag: ${{ github.sha }}
 ```
 
+GitHub hands an action only the secrets and variables named on its step, so the four are named there. The
+step's outputs are `artifact-id` and `coordinate`.
+
+</Tab>
+<Tab value="GitLab">
+
+```yaml
+include:
+  - remote: https://raw.githubusercontent.com/lembosproj/platform/v0.3.0/src/Integrations/GitLab/publish-artifact.yml
+    inputs:
+      version: v0.3.0
+      needs: [build]
+      component: ordering/order-api
+      repository: $CI_REGISTRY_IMAGE/order-api
+      digest: $IMAGE_DIGEST
+      tag: $CI_COMMIT_SHORT_SHA
+
+build:
+  stage: build
+  script:
+    - docker buildx build --push --metadata-file meta.json --tag "$CI_REGISTRY_IMAGE/order-api:$CI_COMMIT_SHORT_SHA" .
+    - echo "IMAGE_DIGEST=$(jq -r '."containerimage.digest"' meta.json)" > build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+```
+
+The template adds a job, `publish-artifact`, which waits for the jobs in `needs` and takes the digest from
+their dotenv report. Give the release tag twice, in the URL and as `version`: GitLab does not tell an
+included file where it was included from. The job leaves `LEMBOS_ARTIFACT_ID` and `LEMBOS_COORDINATE` in
+a dotenv report of its own. It runs on Linux runners, in an image with glibc, `bash`, `curl` and `jq`; the
+default installs the last two each run.
+
+</Tab>
+<Tab value="Azure Pipelines">
+
+```yaml
+resources:
+  repositories:
+    - repository: lembos
+      type: github
+      name: lembosproj/platform
+      ref: refs/tags/v0.3.0
+      endpoint: github
+
+variables:
+  - group: lembos
+
+steps:
+  - bash: |
+      docker buildx build --push --metadata-file meta.json --tag acme.azurecr.io/apps/order-api:$(Build.BuildNumber) .
+      echo "##vso[task.setvariable variable=IMAGE_DIGEST]$(jq -r '."containerimage.digest"' meta.json)"
+    displayName: Build and push
+
+  - template: src/Integrations/AzureDevOps/publish-artifact.yml@lembos
+    parameters:
+      version: v0.3.0
+      component: ordering/order-api
+      repository: acme.azurecr.io/apps/order-api
+      digest: $(IMAGE_DIGEST)
+      tag: $(Build.BuildNumber)
+```
+
+`endpoint` is a GitHub service connection, which Azure Pipelines reads the template's repository through.
+Give the release tag twice, in `ref` and as `version`: a template is not told the ref it was read at. The
+service account and addresses default to the group's variables. The step sets the output variables
+`LEMBOS_ARTIFACT_ID` and `LEMBOS_COORDINATE`, read as `$(lembos.LEMBOS_ARTIFACT_ID)`.
+
+</Tab>
+</Tabs>
+
 `component` is the qualified name the Portal shows, which stays the same from one installation to the
-next. `type` defaults to `OciImage`; `HelmChart` and `Archive` are the others. The action's README lists
+next. `type` defaults to `OciImage`; `HelmChart` and `Archive` are the others. Each step's README lists
 every input and output.
 
-Pin the action to the tag of the platform release you run. Each release publishes the program the
-action runs, built against that release's API. The action downloads it for the runner, Linux or Windows
-on x64 or ARM64, and checks it against the release's digest, so the job needs no .NET or other setup.
+Pin the step to the tag of the platform release you run. Each release publishes the program the steps
+run, built against that release's API. The step downloads it for the runner, Linux or Windows on x64 or
+ARM64, and checks it against the release's digest, so the job needs no .NET or other setup.
 
 ## What happens on a run
 
@@ -88,14 +202,14 @@ on x64 or ARM64, and checks it against the release's digest, so the job needs no
 - **One digest, one component.** If the same bytes are registered to another component, the step fails and
   names it. To ship one build as several components, push it to a repository for each. One push to several
   repositories keeps the digest the same.
-- **Refusals carry the platform's words.** The step fails with the API's own error, in the log and as an
-  annotation on the run: a missing permission, a group the account does not reach, an unknown component or
-  type, or a digest that is not one.
+- **Refusals carry the platform's words.** The step fails with the API's own error in the log, and on
+  GitHub and Azure Pipelines as an error on the run's summary too: a missing permission, a group the
+  account does not reach, an unknown component or type, or a digest that is not one.
 
 ## The call itself
 
-Without the action, a pipeline [obtains a token](/docs/use/access#obtaining-a-token) for the account and
-sends one mutation to `https://<orchestrator>/graphql`:
+Without a ready-made step, a pipeline [obtains a token](/docs/use/access#obtaining-a-token) for the account
+and sends one mutation to `https://<orchestrator>/graphql`:
 
 ```graphql
 mutation {
