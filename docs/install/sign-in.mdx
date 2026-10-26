@@ -1,6 +1,6 @@
 ---
 title: Sign-in providers
-description: Let people sign in to Lembos with GitHub, GitLab, Microsoft Entra ID, Okta, Keycloak, Auth0, Google, or any OpenID Connect provider.
+description: Let people sign in to Lembos with GitHub, GitLab, Microsoft Entra ID, Okta, Keycloak, Auth0, Google, or any OpenID Connect provider, and read your directory from GitHub, GitLab, Entra or Okta.
 ---
 
 Lembos does not let people register themselves. An account comes from an invitation or from your directory. A
@@ -25,6 +25,16 @@ Every type but GitHub is an OpenID Connect provider. Lembos asks for `openid`, `
 in `scopes`. People are linked by the provider's `sub` claim, except on Entra, whose `sub` differs per
 application, so Lembos links by `oid` instead. Set `subjectClaim` to name another claim, and `displayName` to
 change the button's label.
+
+Which claims give a person's address and name are chosen per type, and you can rewrite them with `claims`:
+each field is an ordered list, and the first claim present wins. Entra's address, for instance, falls back
+from `email` to `preferred_username` and `upn`, because Entra sends `email` only for a mailbox:
+
+```yaml
+claims:
+  email: [upn]            # replaces the type's own list for this field
+  name: [name, preferred_username]
+```
 
 ## 1. Register Lembos with the provider
 
@@ -72,12 +82,54 @@ Each entry's client goes in a Secret you manage, named in `secrets.signIn.<name>
   address. Treating it as proven hands that account to whoever typed the address at the provider.
 </Callout>
 
-## 3. Read your directory through GitHub (optional)
+## 3. Read your directory (optional)
 
 A directory-sourced Lembos reads who works for you from a directory, and links each person to the sign-in
-provider that directory belongs to. `platform.directory.provider` names that entry. GitHub reads an
-organisation's members through a GitHub App owned by the organisation and installed on it. The App is a
-separate credential from the sign-in client:
+provider that directory belongs to. `platform.directory.provider` names that entry, and its type decides which
+directory is read. Lembos reads it over outbound HTTPS only, so nothing has to reach into your network:
+
+| Type   | Reads                                           | With                                                                                 |
+|--------|-------------------------------------------------|--------------------------------------------------------------------------------------|
+| GitHub | the organisations a GitHub App is installed on  | the App, in `secrets.directory.gitHub`                                               |
+| GitLab | a group, inherited and invited members included | an access token with `read_api`, in `secrets.directory.gitLab`                       |
+| Entra  | a group, nested groups' members included        | the sign-in's own client, granted Graph's `GroupMember.Read.All` and `User.Read.All` |
+| Okta   | a group                                         | an API token that can read its users, in `secrets.directory.okta`                    |
+
+GitLab, Entra and Okta read the group in `platform.directory.group`: a GitLab group's full path, an Entra
+group's object id, an Okta group's id. Someone blocked in GitLab, disabled in Entra, or suspended or
+deprovisioned in Okta is treated as having left.
+
+```yaml
+platform:
+  userManagement:
+    mode: DirectorySourced
+  directory:
+    provider: Entra
+    group: 22222222-2222-2222-2222-222222222222
+    roleBindings:
+      33333333-3333-3333-3333-333333333333: Administrator   # a group whose members get a role
+  integrations:
+    signIn:
+      Entra:
+        enabled: true
+        type: Entra
+        tenantId: 00000000-0000-0000-0000-000000000000
+```
+
+Which fields give a person's address and name are chosen per directory, and `platform.directory.attributes`
+rewrites them the same way `claims` does, with dotted paths into the directory's record:
+
+```yaml
+platform:
+  directory:
+    attributes:
+      email: [profile.secondEmail]   # an Okta profile field
+```
+
+### GitHub
+
+GitHub reads its organisations through a GitHub App owned by the organisation and installed on it. The App is
+a separate credential from the sign-in client:
 
 | Credentials                    | Used for                             |
 |--------------------------------|--------------------------------------|
@@ -87,17 +139,6 @@ separate credential from the sign-in client:
 They are easy to mix up: using the client credentials to read members fails with a 401 that names neither.
 
 ```yaml
-platform:
-  userManagement:
-    mode: DirectorySourced
-  directory:
-    provider: GitHub
-  integrations:
-    signIn:
-      GitHub:
-        enabled: true
-        type: GitHub
-
 secrets:
   signIn:
     GitHub:
@@ -110,9 +151,9 @@ secrets:
 `github-app-org` may list several organisations, separated by commas.
 
 <Callout type="warn">
-  Membership of **any** listed organisation grants a Lembos account. List only organisations whose
-  membership means "works here". A public one that accepts outside contributors would hand accounts to
-  strangers.
+  Membership of **any** listed organisation, or of the directory's group, grants a Lembos account. Choose one
+  whose membership means "works here". A public organisation that accepts outside contributors would hand
+  accounts to strangers.
 </Callout>
 
 ## 4. Upgrade
