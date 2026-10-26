@@ -108,3 +108,18 @@ curl -s "$ISSUER/connect/token" \
 The reply's `access_token` is a bearer token for the Orchestrator's API, good for a few minutes; ask for
 another rather than keeping one. The token endpoint budgets requests per client as well as per address, so
 a job that retries in a tight loop is told to slow down with a `429` and a `Retry-After`.
+
+The Orchestrator budgets what each caller asks of it, too — every caller outside the platform, a service
+account or somebody's script alike:
+
+| Budget        | Per minute, by default                                          | Chart value                                |
+|---------------|-----------------------------------------------------------------|--------------------------------------------|
+| Query cost    | 300,000, summed from each query's cost; a query is at least 100 | `orchestrator.rateLimit.queryCost`         |
+| Changes       | 120, one per mutation field in a request                        | `orchestrator.rateLimit.mutations`         |
+| Subscriptions | 30 opened                                                       | `orchestrator.rateLimit.subscriptionOpens` |
+
+Over one, a request is refused with the error code `RATE_LIMITED` and a `retryAfter` in seconds, and over
+HTTP with a `429` and a `Retry-After`; a request sent as `application/json` gets the same error with a
+`200`. Each replica of the Orchestrator counts for itself. The Portal and the platform's own accounts are not
+budgeted, and an operator can leave an integration they trust out by its client id, in
+`orchestrator.rateLimit.exemptClients`.
