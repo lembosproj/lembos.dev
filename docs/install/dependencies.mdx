@@ -12,6 +12,18 @@ Each dependency has a `mode` of `simple`, `high-available` or `external`. Left e
 | **Redis**      | One pod            | Sentinel, with HAProxy routing to the primary     | `redis.external`        |
 | **Temporal**   | One pod            | Temporal's official chart, one deployment per role | `temporal.external`    |
 
+Each mode runs a pinned image:
+
+| Dependency      | `simple`                     | `high-available`                        |
+|-----------------|------------------------------|-----------------------------------------|
+| **PostgreSQL**  | `postgres:17.6`              | CloudNativePG running `postgresql:17.6` |
+| **Redis**       | `redis:8.2`                  | `redis:8.8.0-alpine`                    |
+| **Temporal**    | `temporalio/auto-setup:1.29` | `temporalio/server:1.32.0`              |
+| **Temporal UI** | `temporalio/ui:2.53.1`       | the same                                |
+
+An external server should work from PostgreSQL 14, Redis 8 and Temporal 1.29; [Versions](/docs/install#versions)
+says which are tested.
+
 ## PostgreSQL
 
 Each Lembos service has its own database. The simple server creates them on first start.

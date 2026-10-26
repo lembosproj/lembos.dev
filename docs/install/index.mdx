@@ -38,6 +38,26 @@ rules for Prometheus. Both stay off until you turn them on — [Observability](/
 The chart checks for the operators and CRDs it needs before it renders anything, and names what is
 missing rather than leaving the cluster to reject an unknown resource.
 
+## Versions
+
+What the beta runs, what it is tested with, and what it should work with:
+
+| Part        | The chart runs                                | Tested with                      | Should work with    |
+|-------------|-----------------------------------------------|----------------------------------|---------------------|
+| PostgreSQL  | 17.6, in a CloudNativePG cluster too          | 17.6; 18.3 as an external server | 14 to 18            |
+| Redis       | 8.2; 8.8 high-available                       | 8.2; 8.6 as an external server   | 8.x                 |
+| Temporal    | 1.29; 1.32 high-available                     | 1.29                             | 1.29 to 1.32        |
+| Temporal UI | 2.53.1                                        | 2.53.1                           | 2.53.1              |
+| Kubernetes  | —                                             | k3s 1.36                         | 1.27 or later       |
+| Terraform   | 1.16.7, for a blueprint that names no version | 1.16.7, 1.9.5, 1.17.0            | 1.x from 1.9.5      |
+| Helm        | 3.22.1, for a blueprint that names no version | 3.22.1, 3.16.2, 4.3.1            | 3.16 and later, 4.x |
+
+A blueprint names the Terraform or Helm it runs with, and the Worker fetches exactly that release; the defaults
+answer only for one that names none. Each Terraform and Helm listed as tested is fetched and run through the
+Worker's own handling of its output every week. Helm 3.16 supports clusters from 1.28 to 1.31, so a blueprint
+naming it should move to 3.22.1 or 4.3.1 to deploy into a newer one. Under either, a rollout puts back what the chart
+renders, a replica count an autoscaler set included, so a chart under an autoscaler leaves its replicas out.
+
 ## Simple or high-available
 
 One setting, `installMode`, decides the shape of the whole installation:
