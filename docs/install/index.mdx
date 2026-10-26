@@ -20,6 +20,9 @@ unless you supply your own, the three things they depend on.
 | Redis            | Sessions and caches                                           | —                                                                 |
 | Temporal         | Durable workflows: every run is retried and recorded          | `temporal.<your domain>`, for Administrators; internal by default |
 
+Two optional parts watch it: Grafana dashboards, and the alerts that mean the platform is not doing its job, as
+rules for Prometheus. Both stay off until you turn them on — [Observability](/docs/run/observability) says how.
+
 ## Requirements
 
 | When                                     | You need                                                                              |
@@ -30,6 +33,7 @@ unless you supply your own, the three things they depend on.
 | Publishing through a Gateway             | The Gateway API CRDs, 1.4 or later                                                    |
 | Autoscaling                              | A metrics server                                                                      |
 | Scaling the Worker on queue length       | KEDA 2.17 or later                                                                    |
+| Alerts as a `PrometheusRule`             | The Prometheus Operator, which kube-prometheus-stack runs                             |
 
 The chart checks for the operators and CRDs it needs before it renders anything, and names what is
 missing rather than leaving the cluster to reject an unknown resource.

@@ -1,6 +1,6 @@
 ---
 title: Observability
-description: Send Lembos's traces, logs and metrics to your pipeline, and the Grafana dashboards that read them.
+description: Send Lembos's traces, logs and metrics to your pipeline, and the Grafana dashboards and alerts that read them.
 ---
 
 Every Lembos service speaks OpenTelemetry. Point them at a collector and they send traces, metrics and logs,
@@ -67,9 +67,38 @@ temporal:
               kubernetes.io/metadata.name: monitoring
 ```
 
+## Alerts
+
+A dashboard needs somebody looking at it. The chart can also ship the alerts that mean Lembos is not doing its
+job, as a `PrometheusRule` for the Prometheus Operator — the one kube-prometheus-stack runs:
+
+```yaml
+prometheusRules:
+  enabled: true
+  namespace: monitoring              # where the Operator looks, if not the release's namespace
+  labels:
+    release: kube-prometheus-stack   # what its rule selector matches
+  alertLabels:
+    team: platform                   # what your Alertmanager routes on, beside severity and namespace
+```
+
+| Alert                      | Fires when                                                                                   |
+|----------------------------|----------------------------------------------------------------------------------------------|
+| **Triggers owed**          | Something a service committed has waited ten minutes for the workflow that carries it out    |
+| **Runs waiting**           | Work has waited ten minutes on one of the Worker's queues, and no Worker has taken any of it |
+| **Directory sync failing** | A directory sync failed or was refused within the hour, or none has succeeded for an hour    |
+| **Pods restarting**        | A service's containers keep restarting                                                       |
+| **Service unavailable**    | A service has had fewer pods ready than it asks for, for ten minutes                         |
+
+Each says what is wrong and what to look at first. Every threshold is a chart value, and the chart's
+[README](https://github.com/lembosproj/deploy/blob/main/charts/lembos/README.md#alerts) gives the reason for each
+default. They read the metrics the dashboards read, and Temporal's own metrics for the queues, so turn those on as
+above. The chart checks for the Operator before it renders the rule; a Prometheus without it takes the rule's
+`spec` as a rule file as it is.
+
 <Callout title="See it working first">
   The [quickstart](/docs/quickstart) runs exactly this pipeline — collector, Prometheus, Loki, Tempo and
-  Grafana — next to a local install. Its
+  Grafana — next to a local install, and its Prometheus evaluates the alerts. Its
   [configuration](https://github.com/lembosproj/deploy/tree/main/aspire/Lembos.Deploy.AppHost/observability)
   is a working starting point to copy.
 </Callout>
