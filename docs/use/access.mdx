@@ -7,15 +7,16 @@ Find these under **Organization**.
 
 ## Users
 
-People join by **invitation**, or by signing in with GitHub if
-[the integration](/docs/install/github) is on. Nobody registers themselves.
+People join by **invitation**, or from your directory when
+[one is connected](/docs/install/sign-in). Nobody registers themselves.
 
 <Screenshot name="users" ratio={2.9} alt="The users: each person's name, email address and whether they are invited or active." />
 
 ## Signing in
 
-People sign in with a password, a passkey, or GitHub when [the integration](/docs/install/github) is on.
-Each person manages how from their account page: **Account** in the Portal's account menu.
+People sign in with a password, a passkey, or any [sign-in provider](/docs/install/sign-in) your installation
+has turned on: GitHub, GitLab, Microsoft, Okta, Keycloak and others. Each person manages how from their account
+page: **Account** in the Portal's account menu.
 
 A **passkey** is the strongest of these. It lives on a phone, a laptop or a security key, and signs in with
 the device's fingerprint, face or PIN check, so there is no password to steal and no code to type.
@@ -35,8 +36,8 @@ signs you in once in place of a code. **New recovery codes** on the same sheet r
 - A wrong code counts towards locking the account, exactly as a wrong password does.
 - Signing in with a passkey never asks for a code: a passkey is already two factors, the device that holds
   it and the device's own check of you.
-- Signing in through GitHub asks for the code too, if your account is managed here and has GitHub linked.
-  Accounts managed by a directory use their provider's second factor instead.
+- Signing in through a provider asks for the code too, if your account is managed here and has that provider
+  linked. Accounts managed by a directory use their provider's second factor instead.
 
 ### Administrators must have one
 

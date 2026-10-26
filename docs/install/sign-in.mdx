@@ -1,0 +1,124 @@
+---
+title: Sign-in providers
+description: Let people sign in to Lembos with GitHub, GitLab, Microsoft Entra ID, Okta, Keycloak, Auth0, Google, or any OpenID Connect provider.
+---
+
+Lembos does not let people register themselves. An account comes from an invitation or from your directory. A
+sign-in provider is how that person then proves who they are, alongside a password or a passkey.
+
+Each provider is an entry under `platform.integrations.signIn`, keyed by a name. The sign-in page shows the name,
+and every account linked to the provider records it, so choose the name once: renaming an entry unlinks everyone
+who signed in through it. The entry's `type` says which provider it is and what it needs:
+
+| Type       | You give                                                   | Lembos works out                                         |
+|------------|------------------------------------------------------------|----------------------------------------------------------|
+| `GitHub`   | nothing                                                    | GitHub's own sign-in                                     |
+| `GitLab`   | `url`, for a self-managed instance (gitlab.com otherwise)  | the issuer, which is the instance's address              |
+| `Entra`    | `tenantId`                                                 | `https://login.microsoftonline.com/<tenantId>/v2.0`      |
+| `Okta`     | `url`: your Okta org, or one of its authorization servers  | the issuer, which is that address                        |
+| `Keycloak` | `url` and `realm`                                          | `<url>/realms/<realm>`                                   |
+| `Auth0`    | `url`: your tenant's domain                                | the issuer, which is that address                        |
+| `Google`   | nothing                                                    | `https://accounts.google.com`                            |
+| `Generic`  | `issuer`, exactly as its discovery document states it      | nothing: the issuer is all it needs                      |
+
+Every type but GitHub is an OpenID Connect provider. Lembos asks for `openid`, `profile` and `email`; list more
+in `scopes`. People are linked by the provider's `sub` claim, except on Entra, whose `sub` differs per
+application, so Lembos links by `oid` instead. Set `subjectClaim` to name another claim, and `displayName` to
+change the button's label.
+
+## 1. Register Lembos with the provider
+
+Create a web application, or OAuth client, at the provider, and give it this redirect, or callback, URL. Use
+the entry's name in lower case:
+
+```text
+https://identity.<your domain>/connect/callback/login/<name>
+```
+
+An entry called `Entra` is called back on `/connect/callback/login/entra`. The provider issues a client id and a
+client secret.
+
+## 2. Give Lembos the entry and its client
+
+```yaml
+platform:
+  integrations:
+    signIn:
+      Entra:
+        enabled: true
+        type: Entra
+        tenantId: 00000000-0000-0000-0000-000000000000
+      Keycloak:
+        enabled: true
+        type: Keycloak
+        url: https://sso.example.com
+        realm: engineering
+
+secrets:
+  signIn:
+    Entra:
+      existingSecret: lembos-entra     # keys: signin-entra-client-id, signin-entra-client-secret
+    Keycloak:
+      clientId: lembos
+      clientSecret: <the client secret>
+```
+
+Each entry's client goes in a Secret you manage, named in `secrets.signIn.<name>.existingSecret`, with the keys
+`signin-<name>-client-id` and `signin-<name>-client-secret` (the name in lower case), or inline.
+
+<Callout type="warn">
+  Leave `trustsEmailVerification` off unless the provider verifies addresses itself. When a provider sends no
+  `email_verified`, Lembos treats the address as unproven and will not link it to an existing account by
+  address. Treating it as proven hands that account to whoever typed the address at the provider.
+</Callout>
+
+## 3. Read your directory through GitHub (optional)
+
+A directory-sourced Lembos reads who works for you from a directory, and links each person to the sign-in
+provider that directory belongs to. `platform.directory.provider` names that entry. GitHub reads an
+organisation's members through a GitHub App owned by the organisation and installed on it. The App is a
+separate credential from the sign-in client:
+
+| Credentials                    | Used for                             |
+|--------------------------------|--------------------------------------|
+| **App ID** and **private key** | Reading your organisation's members  |
+| **Client ID** and **secret**   | Signing people in, as the entry's    |
+
+They are easy to mix up: using the client credentials to read members fails with a 401 that names neither.
+
+```yaml
+platform:
+  userManagement:
+    mode: DirectorySourced
+  directory:
+    provider: GitHub
+  integrations:
+    signIn:
+      GitHub:
+        enabled: true
+        type: GitHub
+
+secrets:
+  signIn:
+    GitHub:
+      existingSecret: lembos-github    # keys: signin-github-client-id, signin-github-client-secret
+  directory:
+    gitHub:
+      existingSecret: lembos-github    # keys: github-app-id, github-app-org, github-private-key-base64
+```
+
+`github-app-org` may list several organisations, separated by commas.
+
+<Callout type="warn">
+  Membership of **any** listed organisation grants a Lembos account. List only organisations whose
+  membership means "works here". A public one that accepts outside contributors would hand accounts to
+  strangers.
+</Callout>
+
+## 4. Upgrade
+
+```bash
+helm upgrade lembos oci://ghcr.io/lembosproj/charts/lembos --version {{chartVersion}} -n lembos -f values.yaml
+```
+
+The sign-in page now offers each enabled provider, with its logo where Lembos has one.
