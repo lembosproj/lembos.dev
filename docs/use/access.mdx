@@ -12,6 +12,66 @@ People join by **invitation**, or by signing in with GitHub if
 
 <Screenshot name="users" ratio={2.9} alt="The users: each person's name, email address and whether they are invited or active." />
 
+## Signing in
+
+People sign in with a password, a passkey, or GitHub when [the integration](/docs/install/github) is on.
+Each person manages how from their account page: **Account** in the Portal's account menu.
+
+A **passkey** is the strongest of these. It lives on a phone, a laptop or a security key, and signs in with
+the device's fingerprint, face or PIN check, so there is no password to steal and no code to type.
+
+### A code after your password
+
+A password account can add an **authenticator app**: any app that reads QR codes, such as 1Password, Google
+Authenticator or Microsoft Authenticator. On the account page choose **Authenticator app**, scan the code (or
+type the key under it), and enter the six digits the app shows. From then on, signing in with your password
+also asks for a code.
+
+Turning it on shows ten **recovery codes**, once. Keep them somewhere safe, away from your phone: each one
+signs you in once in place of a code. **New recovery codes** on the same sheet replaces them all.
+
+- **Don't ask again on this browser** spares that browser the code for 14 days, unless an operator has set
+  a different period.
+- A wrong code counts towards locking the account, exactly as a wrong password does.
+- Signing in with a passkey never asks for a code: a passkey is already two factors, the device that holds
+  it and the device's own check of you.
+- Signing in through GitHub asks for the code too, if your account is managed here and has GitHub linked.
+  Accounts managed by a directory use their provider's second factor instead.
+
+### Administrators must have one
+
+Outside a development install, an **Administrator** who signs in with a password must have an authenticator.
+Without one, signing in goes straight to setting it up, and nothing else opens until it is done. Scripts
+cannot sign an administrator in with a password alone either. Operators set the rule with
+`platform.userManagement.secondFactor.requiredForAdministrators` in the chart's values; left unset, it is on
+everywhere but a development install.
+
+### Where you're signed in
+
+You sign in once per browser, and that one sign-in serves every application in it: the Portal, Temporal's
+web UI and your account page. **Sessions** on the account page is a table of every browser signed in to your
+account: which browser, the applications it has opened, how you signed in, from which address, and when it
+was last active.
+
+- **Sign out** next to a browser ends it for your account and every application in it.
+- **Sign out everywhere else** does that for every other browser; you stay signed in on the one you used. Use
+  it after losing a laptop or a phone.
+
+Signing out anywhere is signing that browser out: signing out of the Portal signs you out of your account
+and every other application in the same browser. A Portal session you leave alone for eight hours ends by
+itself.
+
+### Lost your phone?
+
+Sign in with your password and a recovery code. Then, on the account page, open **Authenticator app**, turn
+it off with another recovery code, and set it up again on the new phone. If the phone was signed in to Lembos,
+open **Sessions** and sign out everywhere else too. An administrator who turns it off is
+asked to set it up again at their next sign-in, if they haven't already.
+
+Out of recovery codes too? Nothing on the sign-in page gets round the second factor, because anything that did
+would be the way in for whoever took your phone. Ask whoever operates your installation: clearing it takes
+access to Identity's database.
+
 ## Groups
 
 A **group** is a team, a department or a project. Groups nest, and they **own** everything in Lembos:
