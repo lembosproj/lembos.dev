@@ -24,7 +24,8 @@ Administrator for one per CI system, for example one for your GitHub organisatio
 | **Role**  | **Maintainer**, or a custom role with `infrastructure:artifacts:write`, `infrastructure:artifacts:read` and `catalog:components:read`.                                                                |
 
 Creating the account downloads its private key once, as `<client id>.pem`. Lembos keeps only the public
-half.
+half. An account given a public key you generated yourself takes that pair's private key instead: RSA, or
+ECDSA on P-256, P-384 or P-521.
 
 <Callout type="warn">
 An account reaches what its owning group reaches. If one pipeline builds components of two teams with no

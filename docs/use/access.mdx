@@ -78,15 +78,15 @@ A machine uses the `client_credentials` grant at the Identity Server's token end
 `https://<identity>/connect/token`, with `scope=platform`, and authenticates with a signed **client
 assertion** rather than a secret:
 
-| Claim or header | Value                                                             |
-|-----------------|-------------------------------------------------------------------|
-| `typ` (header)  | `client-authentication+jwt`                                       |
-| `alg` (header)  | `RS256` for an RSA key; `ES256`, `ES384` or `ES512` for ECDSA     |
-| `kid` (header)  | The key id shown on the account's page                            |
-| `iss` and `sub` | The client id                                                     |
-| `aud`           | The Identity Server's issuer URL, exactly as it serves it         |
-| `jti`           | A fresh random id per assertion                                   |
-| `iat` and `exp` | Now, and a few minutes later — an assertion is single-use and short |
+| Claim or header | Value                                                                             |
+|-----------------|-----------------------------------------------------------------------------------|
+| `typ` (header)  | `client-authentication+jwt`                                                       |
+| `alg` (header)  | `RS256` for an RSA key; `ES256`, `ES384` or `ES512` for ECDSA                     |
+| `kid` (header)  | The key id shown on the account's page: the key's RFC 7638 thumbprint             |
+| `iss` and `sub` | The client id                                                                     |
+| `aud`           | The Identity Server's issuer URL, exactly as it serves it, with no trailing slash |
+| `jti`           | A fresh random id per assertion                                                   |
+| `iat` and `exp` | Now, and a few minutes later — an assertion is single-use and short               |
 
 ```bash
 # An RS256 assertion with openssl alone; any JWT library does the same in one call.
@@ -105,9 +105,18 @@ curl -s "$ISSUER/connect/token" \
   -d client_assertion="$header.$claims.$signature"
 ```
 
-The reply's `access_token` is a bearer token for the Orchestrator's API, good for a few minutes; ask for
-another rather than keeping one. The token endpoint budgets requests per client as well as per address, so
-a job that retries in a tight loop is told to slow down with a `429` and a `Retry-After`.
+An ECDSA key signs the same way with `ES256`, `ES384` or `ES512`, but the signature is `r` and `s` side by
+side, not the DER encoding `openssl dgst` writes; a JWT library gets this right without being asked.
+
+The reply's `access_token` is a bearer token for the Orchestrator's API, and `expires_in` says how many
+seconds it lasts. Use it for every call until most of that has passed, then ask for another: the
+platform's own services ask again once four fifths of it are gone. If the API answers `401` anyway, ask
+for a new token once and retry the call; a second `401` is a missing role or reach, not an old token. The
+token endpoint budgets requests per client as well as per address, so a job that asks for a token per
+call, or retries in a tight loop, is told to slow down with a `429` and a `Retry-After`.
+
+A pipeline on GitHub Actions needs none of this: the [publish-artifact action](/docs/use/ci) signs the
+assertion and asks for the token itself, with RSA and ECDSA keys alike.
 
 The Orchestrator budgets what each caller asks of it, too — every caller outside the platform, a service
 account or somebody's script alike:
