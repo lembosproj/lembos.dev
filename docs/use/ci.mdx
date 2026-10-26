@@ -9,14 +9,21 @@ the Portal. Each build is registered by its content digest, labelled by its tag,
 from: the repository, commit, ref and CI run. It then appears on the component's **Artifacts** tab, ready
 for a release.
 
-For GitHub Actions there is a ready-made step, the
-[publish-artifact action](https://github.com/lembosproj/platform/tree/main/src/Integrations/GitHub/publish-artifact).
+There is a ready-made step for three CI systems, each running the same program:
+
+| CI system       | Use                                                                                                                        |
+|-----------------|----------------------------------------------------------------------------------------------------------------------------|
+| GitHub Actions  | The [publish-artifact action](https://github.com/lembosproj/platform/tree/main/src/Integrations/GitHub/publish-artifact)   |
+| GitLab CI/CD    | The [publish-artifact template](https://github.com/lembosproj/platform/tree/main/src/Integrations/GitLab), included by URL |
+| Azure Pipelines | The [publish-artifact steps template](https://github.com/lembosproj/platform/tree/main/src/Integrations/AzureDevOps)       |
+
 Any other CI system can make the same call to the API; see [The call itself](#the-call-itself).
 
 ## 1. Get a service account
 
 A pipeline signs in as a [service account](/docs/use/access#service-accounts), never as a person. Ask an
-Administrator for one per CI system, for example one for your GitHub organisation. It needs:
+Administrator for one per CI system, for example one for your GitHub organisation or your GitLab group. It
+needs:
 
 | What      | Set to                                                                                                                                                                                                |
 |-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
