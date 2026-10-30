@@ -86,18 +86,22 @@ Each entry's client goes in a Secret you manage, named in `secrets.signIn.<name>
 
 A directory-sourced Lembos reads who works for you from a directory, and links each person to the sign-in
 provider that directory belongs to. `platform.directory.provider` names that entry, and its type decides which
-directory is read. Lembos reads it over outbound HTTPS only, so nothing has to reach into your network:
+directory is read. Lembos reads it over outbound HTTPS only, so nothing has to reach into your network.
 
-| Type   | Reads                                           | With                                                                                 |
-|--------|-------------------------------------------------|--------------------------------------------------------------------------------------|
-| GitHub | the organisations a GitHub App is installed on  | the App, in `secrets.directory.gitHub`                                               |
-| GitLab | a group, inherited and invited members included | an access token with `read_api`, in `secrets.directory.gitLab`                       |
-| Entra  | a group, nested groups' members included        | the sign-in's own client, granted Graph's `GroupMember.Read.All` and `User.Read.All` |
-| Okta   | a group                                         | an API token that can read its users, in `secrets.directory.okta`                    |
+`platform.directory.group` says whose members are the roster, and `platform.directory.credential` names the
+installation credential it is read with — declared under `platform.integrations.credentials` like any other:
 
-GitLab, Entra and Okta read the group in `platform.directory.group`: a GitLab group's full path, an Entra
-group's object id, an Okta group's id. Someone blocked in GitLab, disabled in Entra, or suspended or
-deprovisioned in Okta is treated as having left.
+| Type   | Reads (`group`)                                                  | With (`credential`)                                                                         |
+|--------|------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| GitHub | the organisations listed, comma-separated                        | a `GitHubApp` installed there with read access to members                                   |
+| GitLab | a group by its full path, inherited and invited members included | an `ApiToken` with `read_api` on the group                                                  |
+| Entra  | a group by its object id, nested groups' members included        | an `EntraApp`: its own app registration, granted `GroupMember.Read.All` and `User.Read.All` |
+| Okta   | a group by its id                                                | an `ApiToken` that can read the group's users                                               |
+
+Someone blocked in GitLab, disabled in Entra, or suspended or deprovisioned in Okta is treated as having left. The
+Worker that reads the directory never holds its secret: it asks the Orchestrator for a token on each read, narrowed
+to reading members. The credential's page in the Portal says how the last read went and how many people it listed,
+and **Check** reads it again.
 
 ```yaml
 platform:
@@ -106,6 +110,7 @@ platform:
   directory:
     provider: Entra
     group: 22222222-2222-2222-2222-222222222222
+    credential: entra-directory
     roleBindings:
       33333333-3333-3333-3333-333333333333: Administrator   # a group whose members get a role
   integrations:
@@ -114,7 +119,19 @@ platform:
         enabled: true
         type: Entra
         tenantId: 00000000-0000-0000-0000-000000000000
+    credentials:
+      entra-directory:
+        type: EntraApp
+        tenantId: 00000000-0000-0000-0000-000000000000
+        appId: 44444444-4444-4444-4444-444444444444   # the directory app's client id
+secrets:
+  credentials:
+    entra-directory:
+      existingSecret: lembos-entra-directory   # key: credential-entra-directory-secret, its client secret
 ```
+
+An app registration of its own for the directory, apart from the one people sign in with, keeps each to the
+permissions its job needs.
 
 Which fields give a person's address and name are chosen per directory, and `platform.directory.attributes`
 rewrites them the same way `claims` does, with dotted paths into the directory's record:
@@ -128,27 +145,35 @@ platform:
 
 ### GitHub
 
-GitHub reads its organisations through a GitHub App owned by the organisation and installed on it. The App is
-a separate credential from the sign-in client:
+GitHub reads its organisations through a GitHub App owned by the organisation and installed on it, with read
+access to members. The App is a separate credential from the sign-in client:
 
 | Credentials                    | Used for                             |
 |--------------------------------|--------------------------------------|
 | **App ID** and **private key** | Reading your organisation's members  |
 | **Client ID** and **secret**   | Signing people in, as the entry's    |
 
-They are easy to mix up: using the client credentials to read members fails with a 401 that names neither.
+They are easy to mix up: the client credentials cannot read members.
 
 ```yaml
+platform:
+  directory:
+    provider: GitHub
+    group: acme, acme-labs          # the organisations whose members are the roster
+    credential: github-app
+  integrations:
+    credentials:
+      github-app:
+        type: GitHubApp
+        appId: "123456"
 secrets:
   signIn:
     GitHub:
-      existingSecret: lembos-github    # keys: signin-github-client-id, signin-github-client-secret
-  directory:
-    gitHub:
-      existingSecret: lembos-github    # keys: github-app-id, github-app-org, github-private-key-base64
+      existingSecret: lembos-github      # keys: signin-github-client-id, signin-github-client-secret
+  credentials:
+    github-app:
+      existingSecret: lembos-github-app  # key: credential-github-app-secret, the App's private key
 ```
-
-`github-app-org` may list several organisations, separated by commas.
 
 <Callout type="warn">
   Membership of **any** listed organisation, or of the directory's group, grants a Lembos account. Choose one
