@@ -1,4 +1,4 @@
 {
   "title": "Use",
-  "pages": ["index", "catalog", "golden-paths", "environments", "ci", "delivery", "governance", "access"]
+  "pages": ["index", "catalog", "golden-paths", "environments", "ci", "delivery", "governance", "notifications", "access"]
 }
