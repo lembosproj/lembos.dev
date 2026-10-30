@@ -16,7 +16,7 @@ For the people who build and ship.
 - **Catalog** — create, change and archive business domains, systems, components, APIs and resources.
 - **Delivery** — request and manage runs; assemble releases and promote them.
 - **Everything else** — read only: environments, placement rules, instances, blueprints, artifacts,
-  execution targets, source credentials, policies and the audit log; users, groups and roles.
+  execution targets, credentials, policies and the audit log; users, groups and roles.
 
 A Contributor cannot see the list of service accounts.
 
@@ -24,8 +24,8 @@ A Contributor cannot see the list of service accounts.
 
 For the platform team.
 
-- **Infrastructure** — create, change and archive blueprints and execution targets; manage source
-  credentials and artifacts, including quarantining an artifact.
+- **Infrastructure** — create, change and archive blueprints and execution targets; manage credentials and
+  what each is used for, and artifacts, including quarantining an artifact.
 - **Delivery** — create, change and archive environments and placement rules; **approve** runs; promote
   releases.
 - **Governance** — create, change and archive policies; read the audit log.
@@ -45,7 +45,7 @@ Three roles exist for Lembos's own background work and can never be given to a p
 
 | Role            | Held by                  | Does                                                            |
 |-----------------|--------------------------|-----------------------------------------------------------------|
-| **Executor**    | The execution agent      | Runs provisioning and deployment work, using execution-target and source credentials |
+| **Executor**    | The execution agent      | Runs provisioning and deployment work, using execution targets and credentials |
 | **Reconciler**  | The drift reconciler     | Reserved: would read what is running and report it; nothing runs under it yet |
 | **Provisioner** | The directory synchronizer | Creates and retires accounts from your directory              |
 

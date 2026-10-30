@@ -25,12 +25,16 @@ where it is, how the platform gets in, and when that was last checked.
 
 <Screenshot name="execution-target" ratio={2.1} alt="An AWS account registered as an execution target, showing its account and state backend, its static-key credential verified as reachable, and a Check now action." />
 
-## Private sources: source credentials
+## Private sources: credentials
 
-Blueprints usually live in private Git repositories or registries. A **source credential** — a token, a
-GitHub App or an SSH key — opens every source under the URL prefixes you give it. The most specific prefix
-wins, so one repository can have a credential of its own. A GitHub App's key never leaves the platform:
-each fetch gets a short-lived, read-only token for one repository.
+Blueprints usually live in private Git repositories or registries. A **credential** — a token, a GitHub App
+or an SSH key — is how Lembos proves who it is, and it says what it may be used for. For private sources, that
+is the URL prefixes it opens: every repository or registry path under them. Whoever holds the credential decides
+where it goes; nobody else can point it somewhere new.
+
+The most specific prefix wins, so one repository can have a credential of its own. Lembos checks a credential
+where it is used as soon as you say where that is, and again whenever it is rotated. A GitHub App's key never
+leaves the platform: each fetch gets a short-lived, read-only token for one repository.
 
 ## Blueprints
 
