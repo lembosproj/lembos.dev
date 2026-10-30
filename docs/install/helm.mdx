@@ -6,7 +6,7 @@ description: Put Lembos into your cluster and sign in for the first time.
 ## Install
 
 Two things have no default: the **domain** every service is published under, and the **SMTP relay** that
-sends invitations and password resets, with its login.
+sends invitations, password resets and notification email, with its login.
 
 ```bash
 helm upgrade --install lembos oci://ghcr.io/lembosproj/charts/lembos --version {{chartVersion}} \

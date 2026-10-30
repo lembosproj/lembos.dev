@@ -25,15 +25,15 @@ rules for Prometheus. Both stay off until you turn them on — [Observability](/
 
 ## Requirements
 
-| When                                     | You need                                                                              |
-|------------------------------------------|---------------------------------------------------------------------------------------|
-| Always                                   | Kubernetes 1.27 or later, and an ingress controller or a Gateway                      |
-| Always, outside a laptop                 | An SMTP relay with a login, over STARTTLS or TLS, for invitations and password resets |
-| High-available PostgreSQL in the cluster | The CloudNativePG operator, 1.25 or later                                             |
-| Publishing through a Gateway             | The Gateway API CRDs, 1.4 or later                                                    |
-| Autoscaling                              | A metrics server                                                                      |
-| Scaling the Worker on queue length       | KEDA 2.17 or later                                                                    |
-| Alerts as a `PrometheusRule`             | The Prometheus Operator, which kube-prometheus-stack runs                             |
+| When                                     | You need                                                                                    |
+|------------------------------------------|---------------------------------------------------------------------------------------------|
+| Always                                   | Kubernetes 1.27 or later, and an ingress controller or a Gateway                            |
+| Always, outside a laptop                 | An SMTP relay with a login, over STARTTLS or TLS, for invitations, resets and notifications |
+| High-available PostgreSQL in the cluster | The CloudNativePG operator, 1.25 or later                                                   |
+| Publishing through a Gateway             | The Gateway API CRDs, 1.4 or later                                                          |
+| Autoscaling                              | A metrics server                                                                            |
+| Scaling the Worker on queue length       | KEDA 2.17 or later                                                                          |
+| Alerts as a `PrometheusRule`             | The Prometheus Operator, which kube-prometheus-stack runs                                   |
 
 The chart checks for the operators and CRDs it needs before it renders anything, and names what is
 missing rather than leaving the cluster to reject an unknown resource.
