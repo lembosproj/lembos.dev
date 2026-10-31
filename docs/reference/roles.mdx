@@ -51,13 +51,14 @@ roles and service accounts.
 
 ## Roles only machines hold
 
-Three roles exist for Lembos's own background work and can never be given to a person:
+Four roles exist for Lembos's own background work and can never be given to a person:
 
-| Role            | Held by                  | Does                                                            |
-|-----------------|--------------------------|-----------------------------------------------------------------|
-| **Executor**    | The execution agent      | Runs provisioning and deployment work, using execution targets and credentials |
-| **Reconciler**  | The drift reconciler     | Reserved: would read what is running and report it; nothing runs under it yet |
-| **Provisioner** | The directory synchronizer | Creates and retires accounts from your directory              |
+| Role            | Held by                    | Does                                                                           |
+|-----------------|----------------------------|--------------------------------------------------------------------------------|
+| **Executor**    | The execution agent        | Runs provisioning and deployment work, using execution targets and credentials |
+| **Reconciler**  | The drift reconciler       | Reserved: would read what is running and report it; nothing runs under it yet  |
+| **Provisioner** | The directory synchronizer | Creates and retires accounts from your directory                               |
+| **Notifier**    | The notifier               | Sends notifications, and the invitations and password resets Identity writes   |
 
 Using a cloud account's credentials or a private source's secret are permissions only the Executor holds,
 and every use is audited.

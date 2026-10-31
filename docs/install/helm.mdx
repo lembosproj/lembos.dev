@@ -12,15 +12,15 @@ sends invitations, password resets and notification email, with its login.
 helm upgrade --install lembos oci://ghcr.io/lembosproj/charts/lembos --version {{chartVersion}} \
   --namespace lembos --create-namespace \
   --set global.domain=idp.example.com \
-  --set identity.smtp.endpoint=smtp://relay.example.com:587 \
-  --set identity.smtp.username=lembos@example.com \
-  --set identity.smtp.password=<relay password>
+  --set mail.endpoint=smtp://relay.example.com:587 \
+  --set mail.username=lembos@example.com \
+  --set mail.password=<relay password>
 ```
 
 Every invitation and password-reset link is a credential, so Lembos reaches the relay over STARTTLS and
 signs in to it, and the install refuses a relay without either. A relay that wants TLS from the first byte
-takes an `smtps://` endpoint and `identity.smtp.security: Tls`. Keep the password out of a committed values
-file with `identity.smtp.existingSecret`.
+takes an `smtps://` endpoint and `mail.security: Tls`. Keep the password out of a committed values file with
+`mail.existingSecret`. The Worker sends everything Lembos mails, so it is the only service that holds the login.
 
 For anything beyond a trial, keep your settings in a values file and pass it with `-f`. The chart's
 [`values.yaml`](https://github.com/lembosproj/deploy/blob/main/charts/lembos/values.yaml) documents every

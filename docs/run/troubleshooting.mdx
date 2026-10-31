@@ -13,7 +13,7 @@ description: Where to look when an installation misbehaves.
 | Requests are refused with 400                  | The request arrived under a hostname the service was not given                                                                                   |
 | The Portal disconnects every minute or so      | Your ingress closes idle WebSockets — raise its timeouts                                                                                         |
 | Everyone is signed out after a restart         | Redis lost its data; give it persistence                                                                                                         |
-| Invitations or notification email never arrive | Check the SMTP relay in `identity.smtp.endpoint`; a group's address also needs its code entered under Notifications → Settings                   |
+| Invitations or notification email never arrive | Check the SMTP relay in `mail.endpoint` and the Worker's logs; a group's address also needs its code entered under Notifications → Settings      |
 | A run is stuck waiting                         | No Worker has room: check Worker capacity and scaling                                                                                            |
 
 Running the [quickstart](/docs/quickstart), also see the
