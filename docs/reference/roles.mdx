@@ -34,6 +34,16 @@ For the platform team.
 A Maintainer approves other people's runs but cannot request runs of their own, so an approval always means
 a second person agreed.
 
+### Viewer
+
+For anybody who should see without touching: reads everything a person may read, service accounts included,
+and changes nothing.
+
+Everybody starts as a Viewer — invited, or provisioned from your directory — so a first sign-in shows what there
+is to see. `platform.userManagement.defaultRole` starts people as a `Contributor` or `Maintainer` instead, or as
+`None`; an administrator changes a person's roles from there. Where your directory confers roles, membership itself
+confers the default one beside them.
+
 ### Administrator
 
 Everything a person can do on the platform, including inviting and managing users and managing groups,

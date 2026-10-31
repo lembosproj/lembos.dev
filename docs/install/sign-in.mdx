@@ -96,12 +96,27 @@ installation credential it is read with — declared under `platform.integration
 | GitHub | the organisations listed, comma-separated                        | a `GitHubApp` installed there with read access to members                                   |
 | GitLab | a group by its full path, inherited and invited members included | a `GitLabToken` with `read_api` on the group, and a `url` for a self-managed instance       |
 | Entra  | a group by its object id, nested groups' members included        | an `EntraApp`: its own app registration, granted `GroupMember.Read.All` and `User.Read.All` |
-| Okta   | a group by its id                                                | an `OktaToken`, with its organisation's `url`, that can read the group's users              |
+| Okta   | a group by its name                                              | an `OktaToken`, with its organisation's `url`, that can read the group's users              |
 
 Someone blocked in GitLab, disabled in Entra, or suspended or deprovisioned in Okta is treated as having left. The
 Worker that reads the directory never holds its secret: it asks the Orchestrator for a token on each read, narrowed
 to reading members. The credential's page in the Portal says how the last read went and how many people it listed,
 and **Check** reads it again.
+
+Every sign-in through that provider is asked too, so nobody waits for the next read: a member who has just joined
+gets their account as they sign in, and somebody who has left is refused at their next sign-in, even while the
+directory cannot be read. Each provider answers from the person's own sign-in, set up like this:
+
+| Type   | The sign-in answers with                                                                       |
+|--------|------------------------------------------------------------------------------------------------|
+| GitHub | the person's membership of the organisations; it asks them for `read:org`, which GitHub shows  |
+| GitLab | its `groups` claim, which lets a member in; somebody who left waits for the next read          |
+| Entra  | the `groups` claim: emit security groups from the sign-in's app registration                   |
+| Okta   | the `groups` claim: a groups claim filter that includes the group, and the `groups` scope      |
+
+A sign-in that cannot answer lets an existing account in and leaves a newcomer waiting for the read, so a provider
+not set up this way loses only the speed. Everybody starts with the role `platform.userManagement.defaultRole` names
+— a Viewer unless you say otherwise; see [Built-in roles](/docs/reference/roles).
 
 ```yaml
 platform:
