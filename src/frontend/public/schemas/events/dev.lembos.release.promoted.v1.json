@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://lembos.dev/schemas/events/dev.lembos.release.promoted.v1.json",
   "title": "dev.lembos.release.promoted",
-  "description": "A release reached a stage: every run its promotion asked for there succeeded. Version 1.",
+  "description": "A release's promotion into a stage completed: every run it asked for, in every slot it covers, succeeded. Version 1.",
   "type": "object",
   "properties": {
     "release": {
@@ -26,6 +26,10 @@
         "id",
         "name"
       ]
+    },
+    "promotionId": {
+      "type": "string",
+      "format": "uuid"
     },
     "environment": {
       "description": "Something the event names: its entity type, its id, and what it was called when the event happened.",
@@ -52,6 +56,13 @@
     "stage": {
       "type": "string"
     },
+    "slots": {
+      "description": "The slots the promotion covers, when it covers some: a release rolled out in waves is promoted once per wave. Empty when it covers every slot the environment admits.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "owner": {
       "description": "The group that owns what the event is about.",
       "type": "object",
@@ -75,8 +86,10 @@
   },
   "required": [
     "release",
+    "promotionId",
     "environment",
     "stage",
+    "slots",
     "owner",
     "link"
   ]

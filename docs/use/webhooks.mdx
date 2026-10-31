@@ -23,11 +23,12 @@ manage its webhooks; anybody who reaches the group can see them.
 3. Lembos shows the webhook's **signing key**, `whsec_…`, **once**. Copy it into your receiver's configuration now: it
    is never shown again. If you lose it, rotate it.
 4. Lembos sends your endpoint a signed **test event**. Once it answers with any `2xx`, the webhook is connected and
-   events start to arrive. Until then nothing else is sent, and the row says it is waiting — and, if the endpoint
+   events start to arrive. Until then nothing else is sent, and the webhook says it is waiting — and, if the endpoint
    answered something else, what.
 
-Each row's menu changes the webhook, **pauses** or resumes it, **rotates** its signing key, sends a **test event**,
-opens its **deliveries**, and **removes** it. Changing the URL waits for the new endpoint to answer a test event before
+The tab lists every webhook; choose one to open it beside the list, with how it stands, everything it is sent, its
+signing key and its **deliveries**. Its **Edit** menu changes the webhook, **pauses** or resumes it, sends a **test
+event**, and **removes** it. Changing the URL waits for the new endpoint to answer a test event before
 anything else is sent there. While a webhook is paused, or waiting for its endpoint, events are not kept for it: it
 hears what happens next.
 
@@ -64,7 +65,7 @@ linking to its group's Webhooks tab, so whoever changes it can see who will hear
 | `dev.lembos.run.failed`                          | A run failed — refused before planning, or a step failed                 |
 | `dev.lembos.run.cancelled`                       | A run was stopped, with nothing left running                             |
 | `dev.lembos.release.promotion.awaiting-approval` | A release's promotion into a stage waits for approvals                   |
-| `dev.lembos.release.promoted`                    | A release reached a stage: every run its promotion asked for succeeded   |
+| `dev.lembos.release.promoted`                    | A promotion completed: every run it asked for, in its slots, succeeded   |
 | `dev.lembos.release.promotion.failed`            | A release's promotion into a stage failed                                |
 | `dev.lembos.release.abandoned`                   | A release was abandoned, and goes no further                             |
 | `dev.lembos.check.failed`                        | An execution target, credential or blueprint version failed its check    |
@@ -216,7 +217,8 @@ handled and skip one you have seen.
 
 ## Rotate the signing key
 
-**Rotate signing key** in the row's menu shows a new key, once. For the next day Lembos signs every request with both
+**Rotate**, among the actions of the webhook's signing key — open the webhook, then its credential — shows a new key,
+once. For the next day Lembos signs every request with both
 the new key and the old one, so put the new key in your receiver whenever suits you that day: whichever it holds, one
 signature matches. After the day only the new key signs.
 
@@ -233,13 +235,13 @@ Redirects are never followed: give the address it moved to.
 
 ## The delivery log
 
-**Deliveries** in the row's menu lists what the webhook was sent in the last 30 days, newest first: each event's type,
+Under a webhook open, its **deliveries** list what it was sent in the last 30 days, newest first: each event's type,
 when it happened, whether it was sent or failed, what your endpoint last answered, how many attempts it took, and why
 it failed. **Send again** sends an event once more — the same body under the same id, to the webhook's URL as it is
 now — for an endpoint that was down longer than a day, or a receiver that lost what it took. Deliveries older than 30
 days are removed.
 
-**Send test event** in the row's menu sends a fresh test event at any time: to connect a webhook still waiting, or to
+**Send test event** in the webhook's **Edit** menu sends a fresh test event at any time: to connect a webhook still waiting, or to
 check that one connected still answers.
 
 ## Which addresses work

@@ -56,6 +56,13 @@
     "stage": {
       "type": "string"
     },
+    "slots": {
+      "description": "The slots the promotion covers, when it covers some: a release rolled out in waves is promoted once per wave. Empty when it covers every slot the environment admits.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "reason": {
       "type": "string"
     },
@@ -85,6 +92,7 @@
     "promotionId",
     "environment",
     "stage",
+    "slots",
     "reason",
     "owner",
     "link"
