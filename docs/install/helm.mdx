@@ -5,22 +5,28 @@ description: Put Lembos into your cluster and sign in for the first time.
 
 ## Install
 
-Two things have no default: the **domain** every service is published under, and the **SMTP relay** that
-sends invitations, password resets and notification email, with its login.
+Two things have no default: the **domain** every service is published under, and the **mail relay** that
+sends invitations, password resets, connection codes and notification email. The relay is a credential your
+installation declares — an `SmtpRelay` marked `uses.mail` — whose secret is its login's password.
 
 ```bash
 helm upgrade --install lembos oci://ghcr.io/lembosproj/charts/lembos --version {{chartVersion}} \
   --namespace lembos --create-namespace \
   --set global.domain=idp.example.com \
-  --set mail.endpoint=smtp://relay.example.com:587 \
-  --set mail.username=lembos@example.com \
-  --set mail.password=<relay password>
+  --set platform.integrations.credentials.mail.type=SmtpRelay \
+  --set platform.integrations.credentials.mail.url=smtp://relay.example.com:587 \
+  --set platform.integrations.credentials.mail.username=lembos@example.com \
+  --set platform.integrations.credentials.mail.uses.mail=true \
+  --set platform.integrations.credentials.mail.uses.notifications=true \
+  --set secrets.credentials.mail.secret=<relay password>
 ```
 
 Every invitation and password-reset link is a credential, so Lembos reaches the relay over STARTTLS and
 signs in to it, and the install refuses a relay without either. A relay that wants TLS from the first byte
-takes an `smtps://` endpoint and `mail.security: Tls`. Keep the password out of a committed values file with
-`mail.existingSecret`. The Worker sends everything Lembos mails, so it is the only service that holds the login.
+takes an `smtps://` url. `uses.notifications` offers email as a notification channel; without it, the relay
+still sends invitations, resets and codes, and notifications stay in the inbox and Slack. Keep the password out
+of a committed values file with `secrets.credentials.mail.existingSecret` — see
+[Credentials you declare](/docs/install/secrets#credentials-you-declare).
 
 For anything beyond a trial, keep your settings in a values file and pass it with `-f`. The chart's
 [`values.yaml`](https://github.com/lembosproj/deploy/blob/main/charts/lembos/values.yaml) documents every
