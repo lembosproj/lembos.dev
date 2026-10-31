@@ -64,19 +64,20 @@ that passes merges and deploys itself, and a major waits for a person.
 
 Inside `src/frontend/`:
 
-| Path                 | What it is                                                       |
-|----------------------|------------------------------------------------------------------|
-| `app/page.tsx`       | The landing page, section by section                             |
-| `app/docs/`          | The docs layout and the page that renders every MDX file         |
-| `app/api/search/`    | The search index, written to a static file at export             |
-| `app/layout.tsx`     | Fonts, metadata and the theme and search providers               |
-| `components/site/`   | The site's own components — header, footer, figures, primitives  |
-| `components/ui/`     | shadcn/ui primitives                                             |
-| `components/mdx.tsx` | The components every docs page can use without an import         |
-| `lib/site.ts`        | Name, links and navigation, in one place so every surface agrees |
-| `lib/source.ts`      | Where Fumadocs finds the docs                                    |
-| `public/portal/`     | Portal screenshots, in light and dark pairs                      |
-| `tools/og-image.tsx` | The source of `public/og-image.png` — see the note in the file   |
+| Path                     | What it is                                                                            |
+|--------------------------|---------------------------------------------------------------------------------------|
+| `app/page.tsx`           | The landing page, section by section                                                  |
+| `app/docs/`              | The docs layout and the page that renders every MDX file                              |
+| `app/api/search/`        | The search index, written to a static file at export                                  |
+| `app/layout.tsx`         | Fonts, metadata and the theme and search providers                                    |
+| `components/site/`       | The site's own components — header, footer, figures, primitives                       |
+| `components/ui/`         | shadcn/ui primitives                                                                  |
+| `components/mdx.tsx`     | The components every docs page can use without an import                              |
+| `lib/site.ts`            | Name, links and navigation, in one place so every surface agrees                      |
+| `lib/source.ts`          | Where Fumadocs finds the docs                                                         |
+| `public/portal/`         | Portal screenshots, in light and dark pairs                                           |
+| `public/schemas/events/` | Webhook event schemas, where `dataschema` points — see `tools/sync-event-schemas.mjs` |
+| `tools/og-image.tsx`     | The source of `public/og-image.png` — see the note in the file                        |
 
 ## Theme
 

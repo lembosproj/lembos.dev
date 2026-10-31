@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lembos.dev/schemas/events/dev.lembos.release.promotion.failed.v1.json",
+  "title": "dev.lembos.release.promotion.failed",
+  "description": "A release's promotion into a stage failed. Version 1.",
+  "type": "object",
+  "properties": {
+    "release": {
+      "description": "Something the event names: its entity type, its id, and what it was called when the event happened.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "The entity type, in the platform's kebab-case: component, resource, environment, release, execution-target, credential, blueprint, webhook.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "name"
+      ]
+    },
+    "promotionId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "environment": {
+      "description": "Something the event names: its entity type, its id, and what it was called when the event happened.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "The entity type, in the platform's kebab-case: component, resource, environment, release, execution-target, credential, blueprint, webhook.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "name"
+      ]
+    },
+    "stage": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "owner": {
+      "description": "The group that owns what the event is about.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "link": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "release",
+    "promotionId",
+    "environment",
+    "stage",
+    "reason",
+    "owner",
+    "link"
+  ]
+}

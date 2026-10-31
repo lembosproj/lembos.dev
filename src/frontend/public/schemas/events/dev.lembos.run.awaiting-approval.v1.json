@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lembos.dev/schemas/events/dev.lembos.run.awaiting-approval.v1.json",
+  "title": "dev.lembos.run.awaiting-approval",
+  "description": "A run planned a change that waits for somebody to approve it before it is applied. Version 1.",
+  "type": "object",
+  "properties": {
+    "runId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "operation": {
+      "description": "Apply or Destroy.",
+      "type": "string"
+    },
+    "subject": {
+      "description": "What the run acts on: a component, a resource, or an environment's own levels.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "The entity type, in the platform's kebab-case: component, resource, environment, release, execution-target, credential, blueprint, webhook.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "name"
+      ]
+    },
+    "environment": {
+      "description": "Something the event names: its entity type, its id, and what it was called when the event happened.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "The entity type, in the platform's kebab-case: component, resource, environment, release, execution-target, credential, blueprint, webhook.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "name"
+      ]
+    },
+    "slot": {
+      "type": "string"
+    },
+    "release": {
+      "description": "The release that asked for the run, where one did.",
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "type": {
+          "description": "The entity type, in the platform's kebab-case: component, resource, environment, release, execution-target, credential, blueprint, webhook.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "name"
+      ]
+    },
+    "owner": {
+      "description": "The group that owns what the event is about.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "link": {
+      "description": "The run in the Portal.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "runId",
+    "operation",
+    "subject",
+    "environment",
+    "slot",
+    "release",
+    "owner",
+    "link"
+  ]
+}

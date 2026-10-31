@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lembos.dev/schemas/events/dev.lembos.webhook.verification.v1.json",
+  "title": "dev.lembos.webhook.verification",
+  "description": "A test of the endpoint: any 2xx it is answered with connects the webhook. Version 1.",
+  "type": "object",
+  "properties": {
+    "webhook": {
+      "description": "Something the event names: its entity type, its id, and what it was called when the event happened.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "The entity type, in the platform's kebab-case: component, resource, environment, release, execution-target, credential, blueprint, webhook.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "name"
+      ]
+    },
+    "owner": {
+      "description": "The group that owns what the event is about.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "message": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "webhook",
+    "owner",
+    "message"
+  ]
+}

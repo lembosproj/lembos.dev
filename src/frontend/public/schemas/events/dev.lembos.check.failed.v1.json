@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lembos.dev/schemas/events/dev.lembos.check.failed.v1.json",
+  "title": "dev.lembos.check.failed",
+  "description": "A check found something the platform depends on not working: a target unreachable, a credential refused, a blueprint version that cannot be fetched. Version 1.",
+  "type": "object",
+  "properties": {
+    "subject": {
+      "description": "What was checked: an execution-target, a credential or a blueprint.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "The entity type, in the platform's kebab-case: component, resource, environment, release, execution-target, credential, blueprint, webhook.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "name"
+      ]
+    },
+    "check": {
+      "description": "Which check: Connection for a target, Availability for a blueprint version, and for a credential the use it was checked for — Identity, SourceAccess, Directory.",
+      "type": "string"
+    },
+    "scope": {
+      "description": "Which part of it: a credential's source type, a blueprint's version tag.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "description": "What the check found: Unauthorized, Unreachable or Misconfigured — and for a blueprint version also NotFound, DigestMismatch or Error.",
+      "type": "string"
+    },
+    "message": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "owner": {
+      "description": "The group that owns what the event is about.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "link": {
+      "description": "Where it is put right, in the Portal.",
+      "type": "string"
+    }
+  },
+  "required": [
+    "subject",
+    "check",
+    "scope",
+    "status",
+    "message",
+    "owner",
+    "link"
+  ]
+}

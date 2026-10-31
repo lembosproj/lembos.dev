@@ -1,0 +1,257 @@
+---
+title: Webhooks
+description: Tell your own systems what Lembos does — signed CloudEvents, sent to an endpoint your group names.
+---
+
+A **webhook** sends your team's own systems — a deployment tracker, an incident tool, a chat bridge, a script — an
+event whenever something they care about happens: a run waits for approval, a release reaches a stage, a check fails.
+Nothing has to poll Lembos to find out.
+
+A webhook is not a [notification](/docs/use/notifications). Notifications tell people what waits on them, worded for
+reading; a webhook tells a machine every event of the types it chose, in a format that does not change under it. Each
+event is a [CloudEvent](https://cloudevents.io), signed the [Standard Webhooks](https://www.standardwebhooks.com) way,
+with a published JSON Schema for its data.
+
+## Add a webhook
+
+A webhook belongs to a [group](/docs/use/access), like everything else in Lembos. Anybody who can change the group can
+manage its webhooks; anybody who reaches the group can see them.
+
+1. Open the group and its **Webhooks** tab, and choose **Add webhook**.
+2. Give it a **name**, the endpoint's **URL** — HTTPS — and the **events** to send, picked by family: runs, releases,
+   checks. By default it also hears about what the group's subgroups own.
+3. Lembos shows the webhook's **signing key**, `whsec_…`, **once**. Copy it into your receiver's configuration now: it
+   is never shown again. If you lose it, rotate it.
+4. Lembos sends your endpoint a signed **test event**. Once it answers with any `2xx`, the webhook is connected and
+   events start to arrive. Until then nothing else is sent, and the row says it is waiting — and, if the endpoint
+   answered something else, what.
+
+Each row's menu changes the webhook, **pauses** or resumes it, **rotates** its signing key, sends a **test event**,
+opens its **deliveries**, and **removes** it. Changing the URL waits for the new endpoint to answer a test event before
+anything else is sent there. While a webhook is paused, or waiting for its endpoint, events are not kept for it: it
+hears what happens next.
+
+### Only some environments, components or resources
+
+A webhook hears about everything its group owns until you narrow it. Under **Narrow to**, you can limit its runs and
+releases to particular **environments** — production alone, say — and to particular **components or resources**, picked
+from what the group owns (and what its subgroups own, while the webhook covers them). The API calls the two lists
+`environmentIds` and `subjectIds`; leave one empty and that limit does not apply.
+
+A run or release event is sent only when it passes every limit you set:
+
+- **Environments**: the event happened in one of them. A release abandoned happened in no environment, so a webhook
+  limited to environments is not sent `release.abandoned`.
+- **Components or resources**: the event is about one of them. A release that carries several passes when it carries
+  any one you picked. A run on an environment itself — not on a component or resource — is about none, so a webhook
+  limited to components or resources is not sent it.
+
+Checks are never narrowed: to stop hearing about checks, untick their types. Turning off **subgroups** while one of a
+subgroup's environments or components is picked is refused, naming it — take it off the list first.
+
+An environment's, a component's or a resource's page lists, under **Webhooks**, the webhooks its events reach, each
+linking to its group's Webhooks tab, so whoever changes it can see who will hear.
+
+## The events
+
+| Type                                             | Sent when                                                                |
+|--------------------------------------------------|--------------------------------------------------------------------------|
+| `dev.lembos.run.awaiting-approval`               | A run planned a change that waits for somebody to approve it             |
+| `dev.lembos.run.approved`                        | A run got every approval it waited for, and is applied next              |
+| `dev.lembos.run.rejected`                        | A run waiting for approval was rejected; nothing it planned is applied   |
+| `dev.lembos.run.started`                         | A run started executing its steps                                        |
+| `dev.lembos.run.succeeded`                       | A run finished, and what it planned is in place                          |
+| `dev.lembos.run.failed`                          | A run failed — refused before planning, or a step failed                 |
+| `dev.lembos.run.cancelled`                       | A run was stopped, with nothing left running                             |
+| `dev.lembos.release.promotion.awaiting-approval` | A release's promotion into a stage waits for approvals                   |
+| `dev.lembos.release.promoted`                    | A release reached a stage: every run its promotion asked for succeeded   |
+| `dev.lembos.release.promotion.failed`            | A release's promotion into a stage failed                                |
+| `dev.lembos.release.abandoned`                   | A release was abandoned, and goes no further                             |
+| `dev.lembos.check.failed`                        | An execution target, credential or blueprint version failed its check    |
+| `dev.lembos.check.recovered`                     | A check that had failed passes again — never a check that had not failed |
+
+Every webhook is also sent `dev.lembos.webhook.verification`, the test event, which nobody subscribes to.
+
+A type is never renamed. Each one's data has a versioned JSON Schema, published at
+`https://lembos.dev/schemas/events/<type>.v1.json` — the address every event names as its `dataschema`. A field may be
+added to a version, so ignore fields you do not know; anything else a receiver would notice is a new version, sent
+under a new schema, and v1 keeps its shape.
+
+## What arrives
+
+Each event is one `POST` to your URL, with the CloudEvent as its whole body, sent as
+`application/cloudevents+json`, and three headers:
+
+| Header              | Holds                                                                              |
+|---------------------|------------------------------------------------------------------------------------|
+| `webhook-id`        | The event's id — the same as its `id`, however many times it is sent               |
+| `webhook-timestamp` | When this attempt was sent, in Unix seconds                                        |
+| `webhook-signature` | `v1,` and the signature; two of them, space-separated, while a rotated key retires |
+
+A failed run, for example:
+
+```json
+{
+  "specversion": "1.0",
+  "id": "019a3b7c5e2f7d41a8c90b6e3f1d2a47",
+  "source": "https://portal.example.org",
+  "type": "dev.lembos.run.failed",
+  "subject": "run/019a3b7c-1d20-7e55-9f0a-3c4b5d6e7f80",
+  "time": "2026-10-31T14:02:17.512Z",
+  "datacontenttype": "application/json",
+  "dataschema": "https://lembos.dev/schemas/events/dev.lembos.run.failed.v1.json",
+  "data": {
+    "runId": "019a3b7c-1d20-7e55-9f0a-3c4b5d6e7f80",
+    "operation": "Apply",
+    "subject": { "type": "component", "id": "0199f0a2-6b3c-7d14-8e25-4f36a7b8c9d0", "name": "ordering/order-api" },
+    "environment": { "type": "environment", "id": "0199f0a1-2c3d-7e4f-9a5b-6c7d8e9f0a1b", "name": "acme/prod" },
+    "slot": "eu-west",
+    "release": { "type": "release", "id": "019a3b70-8f9e-7a6b-bc5d-4e3f2a1b0c9d", "name": "ordering/20261031-1358" },
+    "reason": "Step apply failed: Error acquiring the state lock.",
+    "owner": { "id": "0199f09f-4a5b-7c6d-8e7f-9a0b1c2d3e4f", "name": "Ordering" },
+    "link": "https://portal.example.org/go?type=component&id=0199f0a2-6b3c-7d14-8e25-4f36a7b8c9d0&run=019a3b7c-1d20-7e55-9f0a-3c4b5d6e7f80&release=019a3b70-8f9e-7a6b-bc5d-4e3f2a1b0c9d"
+  }
+}
+```
+
+`source` is your Portal, and `link` opens what the event is about in it. Every field is always present: `release` is
+`null` for a run no release asked for. Names are as they were when the event happened.
+
+## Verify each request
+
+Check every request's signature before you trust it, against the **raw** body — not JSON you parsed and wrote back.
+The Standard Webhooks libraries do it in one call, take the key as Lembos shows it, `whsec_` and all, and refuse a
+timestamp more than five minutes off, so a captured request cannot be replayed later.
+
+<Tabs groupId="verify" persist items={["Node", "Python", "Without a library"]}>
+<Tab value="Node">
+
+```shell
+npm install standardwebhooks
+```
+
+```js
+import express from "express"
+import { Webhook } from "standardwebhooks"
+
+const webhook = new Webhook(process.env.LEMBOS_WEBHOOK_KEY) // whsec_…
+const app = express()
+
+app.post("/lembos", express.raw({ type: "application/cloudevents+json" }), (req, res) => {
+  let event
+  try {
+    event = webhook.verify(req.body, req.headers)
+  } catch {
+    return res.sendStatus(400)
+  }
+
+  // event.type, event.subject, event.data …
+  res.sendStatus(204)
+})
+```
+
+</Tab>
+<Tab value="Python">
+
+```shell
+pip install standardwebhooks
+```
+
+```python
+import os
+
+from flask import Flask, request
+from standardwebhooks import Webhook, WebhookVerificationError
+
+webhook = Webhook(os.environ["LEMBOS_WEBHOOK_KEY"])  # whsec_…
+app = Flask(__name__)
+
+
+@app.post("/lembos")
+def lembos():
+    try:
+        event = webhook.verify(request.get_data(), request.headers)
+    except WebhookVerificationError:
+        return "", 400
+
+    # event["type"], event["subject"], event["data"] …
+    return "", 204
+```
+
+</Tab>
+<Tab value="Without a library">
+
+The signature is HMAC-SHA256, keyed with the base64 after `whsec_`, over `{webhook-id}.{webhook-timestamp}.{body}`,
+written as `v1,` and its base64. Compare in constant time, and accept the request when any signature in the header
+matches:
+
+```python
+import base64
+import hashlib
+import hmac
+import time
+
+
+def verify(key: str, headers, body: bytes) -> bool:
+    event_id, timestamp = headers["webhook-id"], headers["webhook-timestamp"]
+    if abs(time.time() - int(timestamp)) > 300:
+        return False
+
+    secret = base64.b64decode(key.removeprefix("whsec_"))
+    signed = f"{event_id}.{timestamp}.".encode() + body
+    expected = base64.b64encode(hmac.new(secret, signed, hashlib.sha256).digest()).decode()
+
+    return any(
+        version == "v1" and hmac.compare_digest(signature, expected)
+        for version, _, signature in (entry.partition(",") for entry in headers["webhook-signature"].split())
+    )
+```
+
+</Tab>
+</Tabs>
+
+Answer quickly — within 30 seconds — with any `2xx`, and do the work afterwards. An event can arrive more than once,
+when your answer to an earlier attempt was lost; it has the same `webhook-id` each time, so keep the ids you have
+handled and skip one you have seen.
+
+## Rotate the signing key
+
+**Rotate signing key** in the row's menu shows a new key, once. For the next day Lembos signs every request with both
+the new key and the old one, so put the new key in your receiver whenever suits you that day: whichever it holds, one
+signature matches. After the day only the new key signs.
+
+## When your endpoint does not answer
+
+| Your endpoint answers                                           | Lembos                                              |
+|-----------------------------------------------------------------|-----------------------------------------------------|
+| Any `2xx`                                                       | Records it as sent                                  |
+| `408`, `429`, a `5xx`, nothing within 30 seconds, no connection | Tries again, backing off, for about a day           |
+| Anything else — another `4xx`, a redirect                       | Records it as failed at once, with what it answered |
+
+A webhook's events go out in the order they happened, one after another, so a slow endpoint holds up only its own.
+Redirects are never followed: give the address it moved to.
+
+## The delivery log
+
+**Deliveries** in the row's menu lists what the webhook was sent in the last 30 days, newest first: each event's type,
+when it happened, whether it was sent or failed, what your endpoint last answered, how many attempts it took, and why
+it failed. **Send again** sends an event once more — the same body under the same id, to the webhook's URL as it is
+now — for an endpoint that was down longer than a day, or a receiver that lost what it took. Deliveries older than 30
+days are removed.
+
+**Send test event** in the row's menu sends a fresh test event at any time: to connect a webhook still waiting, or to
+check that one connected still answers.
+
+## Which addresses work
+
+- **HTTPS**, with no user name or password in the URL — the signing key is what proves a request came from Lembos.
+- **The public internet only.** Lembos refuses to send to an address inside a private network: loopback, private
+  ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, IPv6 unique-local), link-local (`169.254.0.0/16`, where
+  clouds serve instance metadata), shared (`100.64.0.0/10`) and multicast — checked as each request is made, so a name
+  that later resolves inside the network is refused then. It follows no redirect and goes through no proxy.
+- **One URL per group.** Two of a group's webhooks cannot post to the same URL.
+- **A receiver on your own machine** — `http://localhost`, or a name under `.localhost` — works only on a development
+  installation, where these rules are off.
+
+On an installation behind network policies, an endpoint on a port other than 443 has to be allowed by whoever runs
+Lembos (`networkPolicy.workerEgress` in the Helm chart).
