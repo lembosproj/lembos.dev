@@ -19,22 +19,32 @@ Azure subscriptions and GCP projects are listed where a target is registered and
 
 <Screenshot name="execution-targets" ratio={2.3} alt="The execution targets: Kubernetes clusters and AWS accounts, each with its provider, whether it is reachable, its type and its capabilities." />
 
+A target holds no secret of its own: it names the **credential** it authenticates with — an AWS access key, a
+role Lembos assumes, or the identity the worker runs as for an account; a kubeconfig, a service account token or a
+client certificate for a cluster or a site. It can name one its own group owns, or one a group above it provides —
+the platform team's AWS role for every team's accounts, say — or register a new one in the same sheet.
+
 Lembos checks the connection the moment a target is registered or changed, and on request, so a wrong role
 or an expired credential shows up on the target rather than on the next deployment. A target's page shows
-where it is, how the platform gets in, and when that was last checked.
+where it is, which credential gets the platform in, and when that was last checked.
 
 <Screenshot name="execution-target" ratio={2.1} alt="An AWS account registered as an execution target, showing its account and state backend, its static-key credential verified as reachable, and a Check now action." />
 
-## Private sources: credentials
+## Credentials
 
-Blueprints usually live in private Git repositories or registries. A **credential** — a token, a GitHub App
-or an SSH key — is how Lembos proves who it is, and it says what it may be used for. For private sources, that
-is the URL prefixes it opens: every repository or registry path under them. Whoever holds the credential decides
-where it goes; nobody else can point it somewhere new.
+A **credential** is how Lembos proves who it is, and it says what it may be used for. Each is registered under its
+provider — Git, GitHub, AWS or Kubernetes — and owned by a group; whoever holds it decides where it goes, and nobody
+else can point it somewhere new.
 
-The most specific prefix wins, so one repository can have a credential of its own. Lembos checks a credential
-where it is used as soon as you say where that is, and again whenever it is rotated. A GitHub App's key never
-leaves the platform: each fetch gets a short-lived, read-only token for one repository.
+**For targets**, an AWS or Kubernetes credential is named by the targets that authenticate with it. One account key
+serves every target in that account: rotating it is one edit, and every target that names it is checked again. Its
+page lists those targets, and it cannot be removed while one of them is in service.
+
+**For private sources** — blueprints usually live in private Git repositories or registries — a token, a GitHub App
+or an SSH key opens the URL prefixes it lists: every repository or registry path under them. The most specific prefix
+wins, so one repository can have a credential of its own. Lembos checks a credential where it is used as soon as you
+say where that is, and again whenever it is rotated. A GitHub App's key never leaves the platform: each fetch gets a
+short-lived, read-only token for one repository.
 
 ## Blueprints
 

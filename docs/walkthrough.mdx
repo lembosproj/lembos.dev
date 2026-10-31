@@ -58,10 +58,12 @@ owns what its members build, and you will act on the squad's work for the rest o
 Lembos deploys into **execution targets** — clusters and cloud accounts it holds a credential for. Here the target
 is the cluster the quickstart runs in.
 
-Under **Platform → Execution targets**, **Register target**: a **Kubernetes cluster**, reached with a
-**Kubeconfig**, owned by **Platform**. Paste the kubeconfig the platform's own pods reach the cluster with — the
-quickstart writes it to `aspire/Lembos.Deploy.AppHost/.k3s/k3s/container/kubeconfig.yaml`. It addresses the API
-server as `k3s:6443`; the one under `local/` says `127.0.0.1`, which is your machine, not the pod's.
+Under **Platform → Execution targets**, **Register target**: a **Kubernetes cluster**, owned by **Platform**, with
+**New credential…** as its credential — `platform/local-k3s-kubeconfig`, authenticating with a **Kubeconfig**. Paste
+the kubeconfig the platform's own pods reach the cluster with — the quickstart writes it to
+`aspire/Lembos.Deploy.AppHost/.k3s/k3s/container/kubeconfig.yaml`. It addresses the API server as `k3s:6443`; the one
+under `local/` says `127.0.0.1`, which is your machine, not the pod's. The credential is registered with the target,
+and any other target Platform owns can name it later.
 
 <Screenshot name="walkthrough-register-target" alt="The Register target sheet: platform/local-k3s, a Kubernetes cluster reached by kubeconfig, owned by Platform." />
 
