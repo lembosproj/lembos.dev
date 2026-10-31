@@ -94,9 +94,9 @@ installation credential it is read with — declared under `platform.integration
 | Type   | Reads (`group`)                                                  | With (`credential`)                                                                         |
 |--------|------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
 | GitHub | the organisations listed, comma-separated                        | a `GitHubApp` installed there with read access to members                                   |
-| GitLab | a group by its full path, inherited and invited members included | an `ApiToken` with `read_api` on the group                                                  |
+| GitLab | a group by its full path, inherited and invited members included | a `GitLabToken` with `read_api` on the group, and a `url` for a self-managed instance       |
 | Entra  | a group by its object id, nested groups' members included        | an `EntraApp`: its own app registration, granted `GroupMember.Read.All` and `User.Read.All` |
-| Okta   | a group by its id                                                | an `ApiToken` that can read the group's users                                               |
+| Okta   | a group by its id                                                | an `OktaToken`, with its organisation's `url`, that can read the group's users              |
 
 Someone blocked in GitLab, disabled in Entra, or suspended or deprovisioned in Okta is treated as having left. The
 Worker that reads the directory never holds its secret: it asks the Orchestrator for a token on each read, narrowed

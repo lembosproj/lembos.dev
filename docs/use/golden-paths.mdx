@@ -36,6 +36,11 @@ A **credential** is how Lembos proves who it is, and it says what it may be used
 provider — Git, GitHub, AWS or Kubernetes — and owned by a group; whoever holds it decides where it goes, and nobody
 else can point it somewhere new.
 
+**Every credential is checked on its own**, whatever it is used for: Lembos asks the system that issued it whether it
+still accepts it, and as whom — GitHub or GitLab who a token is, STS who an AWS key or role is, a cluster who its token
+is. So each says where it was issued: a token its host, an SSH key its host, a cluster token its API server. A revoked
+token shows as revoked on its own page before anything trips over it.
+
 **For targets**, an AWS or Kubernetes credential is named by the targets that authenticate with it. One account key
 serves every target in that account: rotating it is one edit, and every target that names it is checked again. Its
 page lists those targets, and it cannot be removed while one of them is in service.
