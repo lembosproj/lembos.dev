@@ -1,0 +1,207 @@
+---
+title: Slack and Teams
+description: Create the Lembos app in Slack or the Lembos bot in Microsoft Teams, and declare it, so notifications reach people and channels there.
+---
+
+Beside the inbox and email, Lembos can send its notifications to Slack, to Microsoft Teams, or to both. Each needs an
+app your installation owns: you create it once in your workspace or tenant, then declare it as a credential under
+`platform.integrations.credentials`. Lembos only calls Slack and Microsoft, and neither calls Lembos, so nothing has to
+be published for them to reach. Once it is declared, people connect their own Slack or Teams and groups add their
+channels in the Portal — see [Notifications](/docs/use/notifications).
+
+## Slack
+
+### 1. Create the app from its manifest
+
+In Slack, open [your apps](https://api.slack.com/apps), **Create New App → From an app manifest**, choose your
+workspace, and paste the manifest Lembos keeps in its repository as `integrations/slack/manifest.json`
+([download it](/integrations/slack/manifest.json)):
+
+```json
+{
+    "display_information": {
+        "name": "Lembos",
+        "description": "Notifications from the Lembos platform — approvals, failed runs and checks.",
+        "background_color": "#4f46e5"
+    },
+    "features": {
+        "bot_user": {
+            "display_name": "Lembos",
+            "always_online": true
+        }
+    },
+    "oauth_config": {
+        "scopes": {
+            "bot": [
+                "chat:write",
+                "chat:write.public",
+                "im:write",
+                "users:read",
+                "users:read.email",
+                "channels:read",
+                "groups:read"
+            ]
+        },
+        "pkce_enabled": false
+    },
+    "settings": {
+        "org_deploy_enabled": false,
+        "socket_mode_enabled": false,
+        "is_mcp_enabled": false,
+        "token_rotation_enabled": false,
+        "app_level_token_rotation_enabled": false
+    }
+}
+```
+
+It asks for nothing that would make Slack call Lembos: no events, no interactivity, no slash commands. Its bot
+scopes:
+
+| Scope               | What Lembos does with it                                                     |
+|---------------------|------------------------------------------------------------------------------|
+| `chat:write`        | Posts a notification or a code, and edits it once it is answered or spent    |
+| `chat:write.public` | Posts in a public channel without the app being invited to it first          |
+| `im:write`          | Opens a person's direct messages, for their code and their notifications     |
+| `users:read`        | Finds a person by their member id as they connect their own Slack            |
+| `channels:read`     | Finds a public channel by its id as a group adds it                          |
+| `groups:read`       | Finds a private channel by its id, once the app has been invited to it       |
+| `users:read.email`  | Nothing yet — optional, and you may remove it before creating the app        |
+
+### 2. Give it the Lembos icon
+
+Under **Basic Information → Display Information → App icon**, upload [the Lembos icon](/integrations/slack/icon.png)
+(`integrations/slack/icon.png` beside the manifest). Slack takes a square image from 512 to 2000 pixels; this one is
+1024.
+
+### 3. Install it
+
+**Install App → Install to your workspace**, allow it, and copy the **Bot User OAuth Token**. It starts with `xoxb-`.
+
+### 4. Declare it
+
+Declare the app with its token as the secret, marked `uses.notifications`:
+
+```yaml
+platform:
+  integrations:
+    credentials:
+      slack:
+        type: SlackApp
+        uses:
+          notifications: true
+secrets:
+  credentials:
+    slack:
+      existingSecret: lembos-slack   # holding credential-slack-secret, the app's xoxb- token
+```
+
+```bash
+helm upgrade lembos oci://ghcr.io/lembosproj/charts/lembos --version {{chartVersion}} -n lembos -f values.yaml
+```
+
+The Orchestrator checks the token with Slack as it starts, and the credential's page in the Portal, `platform/slack`,
+says whether Slack accepted it. Slack is now a channel people and groups can choose beside email. A private channel
+has to invite the app (`/invite @Lembos`) before a group can add it; a public one does not.
+
+## Teams
+
+Teams is reached through a bot: an app registration in Microsoft Entra that Lembos signs in as, an Azure Bot that
+lets that app talk to Teams, and the Teams app your people have installed. Setting it up takes somebody who can
+register apps and grant admin consent in Entra, an Azure subscription for the bot, and a Teams administrator.
+
+### 1. Register the app in Entra
+
+In the Microsoft Entra admin center, **App registrations → New registration**:
+
+- **Name**: Lembos
+- **Supported account types**: accounts in this organizational directory only — a single tenant
+- **Redirect URI**: none
+
+Note its **Application (client) ID** and **Directory (tenant) ID**. Under **Certificates & secrets → New client
+secret**, add a secret and copy its **Value**, which is shown once.
+
+### 2. Let it find people
+
+Under **API permissions → Add a permission → Microsoft Graph → Application permissions**, add `User.Read.All` and
+`Channel.ReadBasic.All`, then **Grant admin consent**. Lembos uses each for one thing: `User.Read.All` to find who an
+email belongs to when somebody connects their own Teams, and `Channel.ReadBasic.All` to turn a channel's link into the
+team the bot posts in, and to check the bot was added to it.
+
+### 3. Create the Azure Bot
+
+In the Azure portal, create an **Azure Bot**:
+
+- **Pricing tier**: F0, the free one, is enough
+- **Type of App**: Single Tenant
+- **Creation type**: use the existing app registration, with the app id and tenant id from step 1
+
+Once it is created, open **Channels**, add **Microsoft Teams**, accept its terms and apply. Leave the **Messaging
+endpoint** under **Configuration** blank: Lembos only sends, and nothing written to the bot would reach it.
+
+### 4. Declare it
+
+Declare the bot with the app's id and tenant, and the client secret as the secret, marked `uses.notifications`:
+
+```yaml
+platform:
+  integrations:
+    credentials:
+      teams:
+        type: TeamsBot
+        appId: 55555555-5555-5555-5555-555555555555      # the Application (client) ID
+        tenantId: 00000000-0000-0000-0000-000000000000   # the Directory (tenant) ID
+        uses:
+          notifications: true
+secrets:
+  credentials:
+    teams:
+      existingSecret: lembos-teams   # holding credential-teams-secret, the client secret's value
+```
+
+```bash
+helm upgrade lembos oci://ghcr.io/lembosproj/charts/lembos --version {{chartVersion}} -n lembos -f values.yaml
+```
+
+The Orchestrator checks the bot by asking Entra for a token for Teams and one for Microsoft Graph. The credential's
+page in the Portal, `platform/teams`, says it is reachable once Graph's token carries `User.Read.All` and
+`Channel.ReadBasic.All`, and names the permission to grant when it does not. The client secret never leaves the
+Orchestrator: the Worker is given a short-lived token for each post.
+
+### 5. Upload the Teams app
+
+On the credential's page, **Download Teams app** gives a zip: the Lembos Teams app, with your bot's app id and your
+Portal's address filled in. In the Teams admin center, **Teams apps → Manage apps → Upload new app**, and upload it.
+It is listed as built for your organisation; make sure your app permission policies allow it.
+
+The zip holds [its manifest](/integrations/teams/manifest.json), with `{{APP_ID}}` replaced by the bot's app id and
+`{{PORTAL_URL}}` and `{{PORTAL_HOST}}` by your Portal's address and host, and its [colour](/integrations/teams/color.png)
+and [outline](/integrations/teams/outline.png) icons. Zipped together after those replacements, the three are the same
+package, if you would rather build it yourself.
+
+### 6. Install it for people
+
+Under **Teams apps → Setup policies**, open the **Global (Org-wide default)** policy, or the one assigned to the people
+who use Lembos, and under **Installed apps → Add apps** add Lembos. A policy can take a few hours to reach everybody.
+The bot can message only somebody who has the app: until it reaches them, a code or a notification sent to them fails,
+saying to install it.
+
+### 7. Add it to teams
+
+A team's owner adds Lembos to the team, from **Apps** in Teams. Only then can a group connect one of that team's
+channels. Private channels cannot be used at all: Teams does not let a bot post in them.
+
+<Callout>
+  Lembos reaches Teams in Microsoft's commercial cloud. Tenants in GCC, GCC High or DoD cannot use the bot yet.
+</Callout>
+
+## Network
+
+Both are reached over HTTPS on 443, which the chart allows anywhere unless you narrow
+`networkPolicy.externalHttps`. If a firewall or an egress proxy decides what leaves the cluster, allow:
+
+| Host                        | Reached by           | For                                                         |
+|-----------------------------|----------------------|-------------------------------------------------------------|
+| `slack.com`                 | Orchestrator, Worker | Checking the token and finding people and channels; posting |
+| `login.microsoftonline.com` | Orchestrator         | The bot's tokens                                            |
+| `graph.microsoft.com`       | Orchestrator         | Finding a person by their email                             |
+| `smba.trafficmanager.net`   | Orchestrator, Worker | Reading a team's channels; posting                          |

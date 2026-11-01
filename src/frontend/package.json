@@ -10,7 +10,8 @@
     "build": "node tools/release.mjs && next build",
     "start": "next start",
     "test": "playwright test",
-    "sync-event-schemas": "node tools/sync-event-schemas.mjs"
+    "sync-event-schemas": "node tools/sync-event-schemas.mjs",
+    "sync-integrations": "node tools/sync-integrations.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "1.1.23",

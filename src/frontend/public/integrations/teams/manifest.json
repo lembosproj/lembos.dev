@@ -1,0 +1,34 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.25/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.25",
+  "version": "1.0.0",
+  "id": "{{APP_ID}}",
+  "developer": {
+    "name": "Lembos",
+    "websiteUrl": "{{PORTAL_URL}}",
+    "privacyUrl": "{{PORTAL_URL}}",
+    "termsOfUseUrl": "{{PORTAL_URL}}"
+  },
+  "name": {
+    "short": "Lembos",
+    "full": "Lembos notifications"
+  },
+  "description": {
+    "short": "What waits on your decision in Lembos, and what failed.",
+    "full": "Posts what Lembos tells your team — runs and releases waiting for approval, failed runs, failed checks — in the channels your groups connect, and messages you about your own, each with a link to answer it in Lembos. It sends only: nothing typed to it reaches Lembos."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#512BD4",
+  "bots": [
+    {
+      "botId": "{{APP_ID}}",
+      "scopes": ["team", "personal"],
+      "isNotificationOnly": true,
+      "supportsFiles": false
+    }
+  ],
+  "validDomains": ["{{PORTAL_HOST}}"]
+}

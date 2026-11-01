@@ -24,7 +24,8 @@ helm upgrade --install lembos oci://ghcr.io/lembosproj/charts/lembos --version {
 Every invitation and password-reset link is a credential, so Lembos reaches the relay over STARTTLS and
 signs in to it, and the install refuses a relay without either. A relay that wants TLS from the first byte
 takes an `smtps://` url. `uses.notifications` offers email as a notification channel; without it, the relay
-still sends invitations, resets and codes, and notifications stay in the inbox and Slack. Keep the password out
+still sends invitations, resets and codes, and notifications stay in the inbox — and in Slack or Teams, once you
+declare the app that posts there ([Slack and Teams](/docs/install/chat)). Keep the password out
 of a committed values file with `secrets.credentials.mail.existingSecret` — see
 [Credentials you declare](/docs/install/secrets#credentials-you-declare).
 

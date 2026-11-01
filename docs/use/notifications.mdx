@@ -50,22 +50,37 @@ When your installation has the Lembos **Slack** app, a **Slack** column sits bes
    day.
 3. Once connected, tick the topics Slack messages you about. **Disconnect** stops it; **Change member id** moves it.
 
-A Slack message that asked for a decision is edited once it is answered — "Approved", "Recovered" — so it never keeps
-asking.
+When your installation has the Lembos **Teams** app, a **Teams** column sits beside them. Connect it the same way:
+
+1. **Connect your Teams**, above the table. Your Lembos email is filled in; change it if Teams knows you by another.
+   Lembos looks you up in your organisation's directory by it.
+2. The Lembos bot sends you a **code** in a Teams chat. Enter it from the same place (**Enter the code**); it works for
+   a day. If nothing arrives, the Lembos app is not installed for you yet: ask your Teams administrator.
+3. Once connected, tick the topics Teams messages you about. **Disconnect** stops it; changing the email moves it.
+
+A Slack or Teams message that asked for a decision is updated once it is answered — "Approved", "Recovered" — so it
+never keeps asking. Each leads to the notification in Lembos with **Open in Lembos**; nothing is answered from inside
+Slack or Teams.
 
 ### Your groups
 
 Below your own channels is every group you belong to, with the addresses its notifications are sent to besides its
-members' own — a team mailing list, or a Slack channel. A group's address is sent each notification **once**, for the
-team, rather than once per member.
+members' own — a team mailing list, a Slack channel or a Teams channel. A group's address is sent each notification
+**once**, for the team, rather than once per member.
 
 Anybody who can change the group can manage its addresses:
 
-1. **Add email** or **Add Slack channel** beside the group, enter the address — or the channel's id, at the bottom of
-   its details in Slack — and choose its topics. By default it also carries what the group's subgroups own. A private
-   channel has to invite the Lembos app first; a channel the app cannot see is refused as you add it.
-2. A **code** is sent to the address, or posted in the channel. Nothing else goes there until it is entered: open the
-   row's menu, **Enter its code**, and type it in. The code works for a day; **Send a new code** sends another.
+1. **Add email**, **Add Slack channel** or **Add Teams channel** beside the group, enter where it goes, and choose its
+   topics. By default it also carries what the group's subgroups own.
+   - **Email**: the address.
+   - **Slack**: the channel's id, at the bottom of its details in Slack. A private channel has to invite the Lembos app
+     first; a channel the app cannot see is refused as you add it.
+   - **Teams**: the channel's link — in Teams, the channel's **⋯** menu, **Get link to channel**, **Copy**. The Lembos
+     app has to be in the team first: a team owner adds it. Private channels cannot be used, because Teams does not let
+     a bot post in them.
+2. A **code** is sent to the address, or posted in the channel — in Teams, as a new post. Nothing else goes there
+   until it is entered: open the row's menu, **Enter its code**, and type it in. The code works for a day;
+   **Send a new code** sends another.
 3. Once connected, the address receives its topics. **Pause** stops it for a while, **Change topics** changes what it
    carries, and **Remove** stops it for good.
 
