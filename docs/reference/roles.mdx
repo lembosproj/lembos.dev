@@ -51,7 +51,7 @@ roles and service accounts.
 
 ## Roles only machines hold
 
-Four roles exist for Lembos's own background work and can never be given to a person:
+Five roles exist for Lembos's own background work and can never be given to a person:
 
 | Role            | Held by                    | Does                                                                                           |
 |-----------------|----------------------------|------------------------------------------------------------------------------------------------|
@@ -59,11 +59,15 @@ Four roles exist for Lembos's own background work and can never be given to a pe
 | **Reconciler**  | The drift reconciler       | Reserved: would read what is running and report it; nothing runs under it yet                  |
 | **Provisioner** | The directory synchronizer | Creates and retires accounts from your directory                                               |
 | **Notifier**    | The notifier               | Sends notifications, groups' webhooks, and the invitations and password resets Identity writes |
+| **Watcher**     | The Portal                 | Hears what changes, so every open page keeps up and every bell is current                      |
 
-Using a cloud account's credentials or a private source's secret are permissions only the Executor holds,
-and every use is audited.
+What these roles do beyond reading is under permissions of their own, whose names start with `internal:`. They are
+not offered when you build a role, and no person's token ever carries one. Each secret a machine can be issued is a
+permission of its own — a session in a cloud account, a private source's credential, the directory's, the chat apps',
+the mail relay's, a webhook's signing key — so each machine can be issued only what its work needs, and every issue is
+audited.
 
 ## Your own roles
 
-Administrators can create roles from any combination of permissions — for instance, splitting "assemble a
-release" from "promote it to production". Built-in roles cannot be renamed or archived.
+Administrators can create roles from any combination of the permissions a person may hold — for instance,
+splitting "assemble a release" from "promote it to production". Built-in roles cannot be renamed or archived.
