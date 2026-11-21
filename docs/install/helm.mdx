@@ -5,14 +5,17 @@ description: Put Lembos into your cluster and sign in for the first time.
 
 ## Install
 
-Two things have no default: the **domain** every service is published under, and the **mail relay** that
-sends invitations, password resets, connection codes and notification email. The relay is a credential your
-installation declares — an `SmtpRelay` marked `uses.mail` — whose secret is its login's password.
+Three settings are yours to give. The **domain** every service is published under has a placeholder,
+`lembos.example.com`, to replace. Two have no default at all, and the install refuses to render without them:
+**where your ingress controller runs**, and the **mail relay** that sends invitations, password resets,
+connection codes and notification email. The relay is a credential your installation declares — an
+`SmtpRelay` marked `uses.mail` — whose secret is its login's password.
 
 ```bash
 helm upgrade --install lembos oci://ghcr.io/lembosproj/charts/lembos --version {{chartVersion}} \
   --namespace lembos --create-namespace \
   --set global.domain=idp.example.com \
+  --set 'global.forwardedHeaders.knownNetworks={10.244.0.0/16}' \
   --set platform.integrations.credentials.mail.type=SmtpRelay \
   --set platform.integrations.credentials.mail.url=smtp://relay.example.com:587 \
   --set platform.integrations.credentials.mail.username=lembos@example.com \
@@ -20,6 +23,11 @@ helm upgrade --install lembos oci://ghcr.io/lembosproj/charts/lembos --version {
   --set platform.integrations.credentials.mail.uses.notifications=true \
   --set secrets.credentials.mail.secret=<relay password>
 ```
+
+`global.forwardedHeaders.knownNetworks` is the pod network your ingress controller runs in. Lembos takes a
+client's address from the forwarded headers only when they come from there, because sign-in rate limiting
+and the audit log depend on that address. `10.244.0.0/16` is a common pod network; use your cluster's. To
+name the controller's fixed addresses instead, use `knownProxies`.
 
 Every invitation and password-reset link is a credential, so Lembos reaches the relay over STARTTLS and
 signs in to it, and the install refuses a relay without either. A relay that wants TLS from the first byte
@@ -59,14 +67,13 @@ resolve there and its certificate must be trusted:
 
 ## Publishing
 
-Turn on `ingress.enabled`, `gateway.enabled`, or both. Two things need attention:
+Turn on `ingress.enabled`, `gateway.enabled`, or both. Three things need attention:
 
 - **Long-lived connections.** The Portal and the Orchestrator keep WebSockets open for as long as a session
   lasts. The chart sets an hour-long timeout for ingress-nginx; for other controllers, set the equivalent
   in `<service>.ingress.annotations`, or `gateway.timeouts` for a Gateway.
 - **More than one Portal replica** needs sticky sessions. `values-ha.yaml` shows the ingress-nginx
   annotations.
-
 - **HTTPS behind the ingress.** Each service serves HTTPS itself, with a certificate the setup job issues
   for its in-cluster names, so the hop from the ingress controller to the service is encrypted too. The
   chart sets this up for ingress-nginx and for Traefik, and for a Gateway through a `BackendTLSPolicy` per
@@ -76,10 +83,8 @@ Turn on `ingress.enabled`, `gateway.enabled`, or both. Two things need attention
 Health checks answer on a management port of their own, which the ingress never routes to, so the public
 addresses do not reveal which dependency is down.
 
-You must also tell Lembos where your ingress controller runs, with
-`global.forwardedHeaders.knownNetworks` (its pod network) or `knownProxies` (its addresses). Lembos only
-trusts client addresses forwarded from there, because sign-in rate limiting depends on them; the install
-refuses to render without one.
+If your ingress controller moves to another network, update `global.forwardedHeaders` (see
+[Install](#install)), or every request seems to come from the controller itself.
 
 ## First sign-in
 
