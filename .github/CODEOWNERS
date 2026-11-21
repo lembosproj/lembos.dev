@@ -1,8 +1,8 @@
-# This file registers ownership for certain parts of the backstage code.
-# Review from a member of the corresponding code owner is required to merge pull requests.
+# This file registers ownership for the repository.
+# Review from a member of the code owner team is required to merge pull requests.
+# Add a narrower pattern and team below when someone owns only part of the repository.
 #
 # The last matching pattern takes precedence.
-# https://help.github.com/articles/about-codeowners/
+# https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
-*                                                 @lembosproj/maintainers @lembosproj/reviewers
-/docs                                             @lembosproj/maintainers @lembosproj/documentation-maintainers
+* @lembosproj/craftsmen
