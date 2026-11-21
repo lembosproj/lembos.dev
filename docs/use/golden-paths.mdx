@@ -9,19 +9,19 @@ underneath. Find them under **Platform**.
 
 ## Where things run: execution targets
 
-An **execution target** is somewhere Lembos is allowed to build into — a cloud account, an on-premises
-site, a Kubernetes cluster. Registering one is a deliberate act by the platform team; a blueprint can never
-create one.
+An **execution target** is somewhere Lembos is allowed to build into — a cloud account or a Kubernetes
+cluster. Registering one is a deliberate act by the platform team; a blueprint can never create one.
 
-Today a target is one of three kinds. An **AWS account** is where Terraform blueprints build; a **Kubernetes
-cluster**, or an **on-premises site** (a cluster whose hardware you own), is where Helm blueprints deploy.
-Azure subscriptions and GCP projects are listed where a target is registered and cannot be registered yet.
+Today a target is one of five types. An **AWS account**, an **Azure subscription**, a **Google Cloud
+project** and a **Cloudflare account** are where Terraform and OpenTofu blueprints build. A **Kubernetes
+cluster** is where Helm blueprints deploy, whether it runs in a cloud or on hardware you own.
 
 <Screenshot name="execution-targets" ratio={2.3} alt="The execution targets: Kubernetes clusters and AWS accounts, each with its provider, whether it is reachable, its type and its capabilities." />
 
-A target holds no secret of its own: it names the **credential** it authenticates with — an AWS access key, a
-role Lembos assumes, or the identity the worker runs as for an account; a kubeconfig, a service account token or a
-client certificate for a cluster or a site. It can name one its own group owns, or one a group above it provides —
+A target holds no secret of its own: it names the **credential** it authenticates with. For a cloud account
+that is a key, a service principal or a service account, a role or an account Lembos acts as, or the identity
+the worker runs as; for Cloudflare, an API token; for a cluster, a kubeconfig, a service account token or a
+client certificate. It can name one its own group owns, or one a group above it provides —
 the platform team's AWS role for every team's accounts, say — or register a new one in the same sheet.
 
 Lembos checks the connection the moment a target is registered or changed, and on request, so a wrong role
